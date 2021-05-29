@@ -16,12 +16,14 @@ Autodesk Revit families and macros for generic ISO metric bolts and bolt assembl
   * Coarse: Assembly not visible(!)
   * Medium: Bolt head, nut, washers, and simplified bolt end visible
   * Fine: Detailed assembly visible
+<!--
 * Included thread texture is installed as follows:
   * Copy texture file "M12 Metric Thread - displace.png" into your project folder
   * Open material "Steel galvanized, metric thread" in the materials editor and go to the appearance tab
   * Re-link the three references to the texture file
   * Add the path of the texture file to your rendering path
   * You're good to go...
+-->
 
 ## Standards
 * ISO metric thread: DIN 13, DIN 68-1 (see e.g. http://www.iso-gewinde.at)
