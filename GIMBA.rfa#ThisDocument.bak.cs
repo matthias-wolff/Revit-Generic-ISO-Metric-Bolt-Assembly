@@ -23,6 +23,79 @@ using Autodesk.Revit.DB.Visual;         // For appearance asset
 using System.Collections.Generic;       // For Dictionary, IEnumerable, etc.
 using System.Linq;                      // For .Cast, .ToList, etc
 
+/// <summary>Basic static utility method</summary>
+public class Utils
+{
+
+  #region C# Reflection
+  
+  /// <summary>Returns the path if the current C# source file</summary>
+  /// <seealso href="https://stackoverflow.com/questions/47841441/how-do-i-get-the-path-to-the-current-c-sharp-source-code-file"
+  ///   >Stackoverflow. How do I get the path to the current C# source code file?</seealso>
+  public static string GetThisFilePath([CallerFilePath] string path = null)
+  {
+    return path;
+  }
+
+  #endregion
+
+  #region String formatters
+  
+  /// <summary>Formats a human-readable message including a count</summary>
+  /// <param name="count">The count</param>
+  /// <param name="format">The message format string (see <see cref="String.Format"/>). Field {0} will 
+  /// be filled with the <paramref name="count"/> or "no" if the <paramref name="count"/> is zero.
+  /// Field {1} will be filled with the appropriate suffix.</param>
+  /// <param name="pluralSuffix">The plural suffix (optional, default is "s")</param>
+  /// <param name="singularSuffix">The singular suffix (optional, default is "")</param>
+  /// <returns></returns>
+  public static string MakeCountMsg(
+    int    count, 
+    string format, 
+    string pluralSuffix   = "s", 
+    string singularSuffix = ""
+  )
+  {
+    string sCount  = count!=0 ? count+"" : "no";
+    string sSuffix = count!=1 ? pluralSuffix : singularSuffix;
+    return String.Format(format,sCount,sSuffix);
+  }
+
+  /// <summary>Formats a human-readable message including a count and appends "--> ok" or "--> 
+  /// NOT OK" depending on a condition</summary>
+  /// <param name="count">The count</param>
+  /// <param name="condition">The condition</param>
+  /// <param name="format">The message format string (see <see cref="String.Format"/>). Field {0} will 
+  /// be filled with the <paramref name="count"/> or "no" if the <paramref name="count"/> is zero.
+  /// Field {1} will be filled with the appropriate suffix.</param>
+  /// <param name="pluralSuffix">The plural suffix (optional, default is "s")</param>
+  /// <param name="singularSuffix">The singular suffix (optional, default is "")</param>
+  /// <returns></returns>
+  public static string MakeCountOkMsg(
+    int    count, 
+    bool   condition, 
+    string format, 
+    string pluralSuffix="s", 
+    string singularSuffix=""
+  )
+  {
+    string s = Utils.MakeCountMsg(count,format,pluralSuffix,singularSuffix);
+    return s + (condition ? " --> ok" : " --> NOT OK");
+  }
+
+  #endregion
+
+  /// <summary>Creates a hyperlink to the module help page</summary>
+  /// <param name="doc">The Revit document this module is residing in</param>
+  /// <param name="text">The link text</param>
+  public static string MakeHelpLink(Document doc, string text)
+  {
+    string path = Path.Combine(Path.GetDirectoryName(doc.PathName),"GIMBA.html");
+    return "<a href=\""+path+"\">"+text+"</a>";
+  }
+
+}
+
 /// <summary>Information on tasks completed by a Revit macro and on problems</summary>
 public class Log
 {
@@ -37,13 +110,20 @@ public class Log
   {
     return Log.LogFileName;
   }
-  
+
+  /// <summary>Returns a hyperlink to the log file</summary>
+  /// <param name="text">The link text</param>
+  public static string MakeLogFileLink(string text)
+  {
+    return "<a href=\""+Log.GetLogFileName()+"\">"+text+"</a>";
+  }
+
   /// <summary>Deletes the log file.</summary>
   protected static void DeleteLogFile()
   { 
     try { File.Delete(LogFileName); } catch {/* Ignore errors*/}
   }
-
+ 
   #endregion
 
   #region Log keeping
@@ -61,8 +141,8 @@ public class Log
       
       // Backup this source file (Revit cost me 10 hours of wirking yesterday... :((
       string ts = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-      File.Copy(Log.GetThisFilePath(),Path.Combine(path,"GIMBA.rfa#ThisDocument.bak.cs"),true);
-      File.Copy(Log.GetThisFilePath(),Path.Combine(path,"GIMBA.rfa#ThisDocument.bak-"+ts+".cs"),true);
+      File.Copy(Utils.GetThisFilePath(),Path.Combine(path,"GIMBA.rfa#ThisDocument.bak.cs"),true);
+      File.Copy(Utils.GetThisFilePath(),Path.Combine(path,"GIMBA.rfa#ThisDocument.bak-"+ts+".cs"),true);
     }
     catch (Exception e)
     {
@@ -105,60 +185,6 @@ public class Log
     WL("Pass complete");
   }
 
-  #endregion
-  
-  #region Miscellaneous Helpers
-  
-  /// <summary>Returns the path if the current C# source file</summary>
-  /// <seealso href="https://stackoverflow.com/questions/47841441/how-do-i-get-the-path-to-the-current-c-sharp-source-code-file"
-  ///   >Stackoverflow. How do I get the path to the current C# source code file?</seealso>
-  public static string GetThisFilePath([CallerFilePath] string path = null)
-  {
-    return path;
-  }
-
-  /// <summary>Formats a human-readable message including a count</summary>
-  /// <param name="count">The count</param>
-  /// <param name="format">The message format string (see <see cref="String.Format"/>). Field {0} will 
-  /// be filled with the <paramref name="count"/> or "no" if the <paramref name="count"/> is zero.
-  /// Field {1} will be filled with the appropriate suffix.</param>
-  /// <param name="pluralSuffix">The plural suffix (optional, default is "s")</param>
-  /// <param name="singularSuffix">The singular suffix (optional, default is "")</param>
-  /// <returns></returns>
-  public static string MakeCountMsg(
-    int    count, 
-    string format, 
-    string pluralSuffix   = "s", 
-    string singularSuffix = ""
-  )
-  {
-    string sCount  = count!=0 ? count+"" : "no";
-    string sSuffix = count!=1 ? pluralSuffix : singularSuffix;
-    return String.Format(format,sCount,sSuffix);
-  }
-
-  /// <summary>Formats a human-readable message including a count and appends "--> ok" or "--> 
-  /// NOT OK" depending on a condition</summary>
-  /// <param name="count">The count</param>
-  /// <param name="condition">The condition</param>
-  /// <param name="format">The message format string (see <see cref="String.Format"/>). Field {0} will 
-  /// be filled with the <paramref name="count"/> or "no" if the <paramref name="count"/> is zero.
-  /// Field {1} will be filled with the appropriate suffix.</param>
-  /// <param name="pluralSuffix">The plural suffix (optional, default is "s")</param>
-  /// <param name="singularSuffix">The singular suffix (optional, default is "")</param>
-  /// <returns></returns>
-  public static string MakeCountOkMsg(
-    int    count, 
-    bool   condition, 
-    string format, 
-    string pluralSuffix="s", 
-    string singularSuffix=""
-  )
-  {
-    string s = Log.MakeCountMsg(count,format,pluralSuffix,singularSuffix);
-    return s + (condition ? " --> ok" : " --> NOT OK");
-  }
- 
   #endregion
 
 }
@@ -373,14 +399,30 @@ public class ThreadGeometry
     if (ThreadGeometry.Threads==null)
     {
       ThreadGeometry.Threads = new Dictionary<string,ThreadGeometry>();
-//      new ThreadGeometry( 3,0.5 ); // NOTE: Newly created objects register themselves with dictionary
-//      new ThreadGeometry( 4,0.7 );
+      new ThreadGeometry( 3,0.5 ); // NOTE: Newly created objects register themselves with dictionary
+      new ThreadGeometry( 4,0.7 );
       new ThreadGeometry( 5,0.8 );
-//      new ThreadGeometry( 6,1   );
-//      new ThreadGeometry( 8,1.25);
-//      new ThreadGeometry(10,1.5 );
-//      new ThreadGeometry(12,1.75);
-      // TODO: Add threads M14..M64
+      new ThreadGeometry( 6,1   );
+      new ThreadGeometry( 8,1.25);
+      new ThreadGeometry(10,1.5 );
+      new ThreadGeometry(12,1.75);
+      new ThreadGeometry(14,2   );
+      new ThreadGeometry(16,2   );
+      new ThreadGeometry(18,2.5 );
+      new ThreadGeometry(20,2.5 );
+      new ThreadGeometry(22,2.5 );
+      new ThreadGeometry(24,3   );
+      new ThreadGeometry(27,3   );
+      new ThreadGeometry(30,3.5 );
+      new ThreadGeometry(33,3.5 );
+      new ThreadGeometry(36,4   );
+      new ThreadGeometry(39,4   );
+      new ThreadGeometry(42,4.5 );
+      new ThreadGeometry(45,4.5 );
+      new ThreadGeometry(48,5   );
+      new ThreadGeometry(52,5   );
+      new ThreadGeometry(56,5.5 );
+      new ThreadGeometry(64,6   );
     }
     return ThreadGeometry.Threads.Values.ToList();
   }
@@ -458,43 +500,73 @@ public static class ThreadMaterials
   public static string sVMATS = @"^GIMBA - {0} - Thread template$";
   public static Regex  VMATS = new Regex("^"+String.Format(sVMATS,"(.+)")+"$");
 
+  /// <summary>Counter index for thread geometries</summary>
+  public static int CNT_TGEO = 0;
+
+  /// <summary>Counter index for (valid) template materials</summary>
+  public static int CNT_VMAT = 1;
+
+  /// <summary>Counter index for invalid template materials</summary>
+  public static int CNT_VMAT_INVAL = 2;
+
+  /// <summary>Counter index for exisiting thread materials</summary>
+  public static int CNT_TMAT = 3;
+
+  /// <summary>Counter index for skipped thread materials</summary>
+  public static int CNT_SKIP = 4;
+
+  /// <summary>Counter index for deleted thread materials</summary>
+  public static int CNT_DEL = 5;
+
+  /// <summary>Counter index for overwritten thread materials</summary>
+  public static int CNT_OVR = 6;
+
+  /// <summary>Counter index for newly created thread materials</summary>
+  public static int CNT_CRE = 7;
+
+  /// <summary>Counter index for thread materials that could not be deleted</summary>
+  public static int CNT_DELFAIL = 8;
+
+  /// <summary>Counter index for thread materials that could not be overwritten</summary>
+  public static int CNT_OVRFAIL = 9;
+
+  /// <summary>Counter index for thread materials that could not be created</summary>
+  public static int CNT_CREFAIL = 10;
+
+  /// <summary>Counter array size</summary>
+  public static int CNT_MAX = 11;
+  
   #endregion
 
-  #region User Inferface
+  #region User Interface
   
   /// <summary>Shows the welcome dialog</summary>
   /// <param name="td">The task dialog to use</param>
   /// <param name="doc">The Revit document to work on</param>
-  /// <param name="tgeos">List of thread geometries</param>
-  /// <param name="tMats">List of existing thread materials</param>
-  /// <param name="vMats">List of thread template materials (valid or invalid)</param>
-  /// <param name="vMatsValid">List of valid thread template materials</param>
-  /// <returns></returns>
+  /// <param name="counts">Operation and error counters</param>
+  /// <returns>The task dialog result</returns>
   public static TaskDialogResult DoWelcomeDialog(
-    TaskDialog            td,
-    Document              doc,
-    IList<ThreadGeometry> tgeos,
-    IList<Material>       tMats,
-    IList<Material>       vMats, 
-    IList<Material>       vMatsValid
+    TaskDialog td,
+    Document   doc,
+    int[]      counts
   )
   {
     // Big decision: If ok, macro operations can be performed
-    bool   ready   = vMatsValid.Count>0 && tgeos.Count>0;
-    string docName = doc.Title + (doc.IsFamilyDocument ? ".rfa" : ".rvt");
+    bool ready = counts[CNT_VMAT]>0 && counts[CNT_TGEO]>0;
 
     // Prepare texts
+    string docName = doc.Title + (doc.IsFamilyDocument ? ".rfa" : ".rvt");
     string stgeos  = "* Found {0} thread geometr{1} --> ";
     string stMats  = "* Found {0} existing thread material{1} --> ok";
     string svvMats = "* Found {0} valid template material{1} --> ";
     string sivMats = "* Found {0} invalid template material{1} --> ";
-    stgeos  = Log.MakeCountMsg(tgeos.Count,stgeos,"ies","y");
-    stMats  = Log.MakeCountMsg(tMats.Count,stMats);
-    svvMats = Log.MakeCountMsg(vMats.Count,svvMats);
-    sivMats = Log.MakeCountMsg(vMats.Count-vMatsValid.Count,sivMats);
-    stgeos  += tgeos.Count>0 ? "ok" : "NOT OK" ;
-    svvMats += vMats.Count>0 ? "ok" : "NOT OK" ;
-    sivMats += (vMats.Count-vMatsValid.Count)>0 ? "ignore" : "ok" ;
+    stgeos  = Utils.MakeCountMsg(counts[CNT_TGEO],stgeos,"ies","y");
+    stMats  = Utils.MakeCountMsg(counts[CNT_TMAT],stMats);
+    svvMats = Utils.MakeCountMsg(counts[CNT_VMAT],svvMats);
+    sivMats = Utils.MakeCountMsg(counts[CNT_VMAT_INVAL],sivMats);
+    stgeos  += counts[CNT_TGEO]>0 ? "ok" : "NOT OK" ;
+    svvMats += counts[CNT_VMAT]>0 ? "ok" : "NOT OK" ;
+    sivMats += counts[CNT_VMAT_INVAL]>0 ? "ignore" : "ok" ;
     td.ExpandedContent = "Summary of pre-check results:\n"
                        + stgeos  + "\n"
                        + stMats  + "\n"
@@ -508,9 +580,7 @@ public static class ThreadMaterials
     td.MainInstruction   = "This macro performs batch operations on ISO metric "
                          + "screw thread materials. ";
     td.MainContent       = "Working document is: "+docName+"\n";
-    // FIXME: This displays GIMBA.html in editor, not in browser
-    td.FooterText        = Path.Combine(Path.GetDirectoryName(doc.PathName),"GIMBA.html");
-    td.FooterText        = "<a href=\""+td.FooterText+"\">Help</a>";
+    td.FooterText        = Utils.MakeHelpLink(doc,"Help");
     td.AllowCancellation = true;
     td.TitleAutoPrefix   = false;
     if (ready)
@@ -523,23 +593,23 @@ public static class ThreadMaterials
       string sCmdSupp1    = "Will create {0} thread material{1}.";
       string sCmdSupp2    = "Please choose below whether {0} existing thread material{1} "
                           + "shall be overwritten.";
-      sCmdSupp1           = Log.MakeCountMsg(tgeos.Count*vMats.Count,sCmdSupp1);
-      sCmdSupp2           = Log.MakeCountMsg(tMats.Count,sCmdSupp2);
+      sCmdSupp1           = Utils.MakeCountMsg(counts[CNT_TGEO]*counts[CNT_VMAT],sCmdSupp1);
+      sCmdSupp2           = Utils.MakeCountMsg(counts[CNT_TMAT],sCmdSupp2);
       td.AddCommandLink(
         TaskDialogCommandLinkId.CommandLink1,
         "Create Thread Materials",
-        sCmdSupp1 + (tMats.Count>0 ? " "+sCmdSupp2 : "")
+        sCmdSupp1 + (counts[CNT_TMAT]>0 ? " "+sCmdSupp2 : "")
       );
-      if (tMats.Count>0)
+      if (counts[CNT_TMAT]>0)
       {
-        td.VerificationText = "Create shall overwrite existing thread material{1}";
-        td.VerificationText = Log.MakeCountMsg(tMats.Count,td.VerificationText);
+        td.VerificationText = "Overwrite existing thread material{1}";
+        td.VerificationText = Utils.MakeCountMsg(counts[CNT_TMAT],td.VerificationText);
         sCmdSupp1           = "Will delete {0} existing thread material{1}. "
                             + "Template or other materials will not be deleted!";
         td.AddCommandLink(
           TaskDialogCommandLinkId.CommandLink2,
           "Delete Thread Materials",
-          Log.MakeCountMsg(tMats.Count,sCmdSupp1)
+          Utils.MakeCountMsg(counts[CNT_TMAT],sCmdSupp1)
         );
       }
     }
@@ -548,16 +618,81 @@ public static class ThreadMaterials
       // - Pre-checks failed: nothing can be done
       td.Title            = "Pre-Checks Failed";
       td.MainInstruction += "Pre-checks failed. No operation is possible on document.";
-      td.FooterText      += " - <a href=\""+Log.GetLogFileName()+"\">View log file</a>";
+      td.FooterText      += " - "+Log.MakeLogFileLink("View log file");
       td.MainContent     += "See details and log file for further information.";
       td.CommonButtons    = TaskDialogCommonButtons.Close;
     }
-    
+
     // Show task dialog
-    TaskDialogResult tdr = td.Show();
-    return tdr;
-//    if (TaskDialogResult.CommandLink1 == tdr)
-//    try { Process.Start(LogFileName); } catch {/*Ignore errors*/}
+    return td.Show();
+  }
+  
+  /// <summary>Shows the wrap-up dialog</summary>
+  /// <param name="td">The task dialog to use</param>
+  /// <param name="doc">The Revit document that has been worked on</param>
+  /// <param name="cmd">Command executed on document</param>
+  /// <param name="counts">Operation and error counters</param>
+  /// <returns>The task dialog result</returns>
+  public static TaskDialogResult DoWrapupDialog(
+    TaskDialog       td,
+    Document         doc,
+    TaskDialogResult cmd,
+    int[]            counts
+  )
+  {
+    // Prepare texts
+    bool   errors  = counts[CNT_DELFAIL]>0 || counts[CNT_OVRFAIL]>0 || counts[CNT_CREFAIL]>0;
+    string docName = doc.Title + (doc.IsFamilyDocument ? ".rfa" : ".rvt");
+    
+    // Configure task dialog
+    td.Title             = "Operation Completed" + (errors ? " with Errors" : "" );
+    td.MainContent       = "See details and log file for further information.";
+    td.ExpandedContent   = "Summary of operations performed:";
+    // FIXME: This displays GIMBA.html in editor, not in browser
+    td.FooterText        = Path.Combine(Path.GetDirectoryName(doc.PathName),"GIMBA.html");
+    td.FooterText        = Utils.MakeHelpLink(doc,"Help")
+                         + " - " + Log.MakeLogFileLink("View log file");
+    td.CommonButtons     = TaskDialogCommonButtons.Close;
+    td.AllowCancellation = true;
+    td.TitleAutoPrefix   = false;
+    if (errors)
+      td.MainIcon = TaskDialogIcon.TaskDialogIconWarning;
+
+    switch (cmd)
+    {
+      case TaskDialogResult.CommandLink1:
+        if (!errors && counts[CNT_CRE]==0 && counts[CNT_OVR]==0)
+          td.MainInstruction = "All thread materials were already present. "
+                             + "Did not create new materials.";
+        else
+          td.MainInstruction = Utils.MakeCountMsg(counts[CNT_CRE]+counts[CNT_OVR],"Created {0} thread material{1}.");
+        td.ExpandedContent += Utils.MakeCountMsg(counts[CNT_CRE ],"\n* Created {0} new material{1}");
+        td.ExpandedContent += Utils.MakeCountMsg(counts[CNT_OVR ],"\n* Overwrote {0} material{1}");
+        if (counts[CNT_SKIP]>0)
+          td.ExpandedContent += Utils.MakeCountMsg(counts[CNT_SKIP],"\n* Skipped {0} existing material{1}");
+        if (counts[CNT_CREFAIL]>0)
+          td.ExpandedContent += Utils.MakeCountMsg(counts[CNT_CREFAIL],"\n* Failed to create {0} material{1}");
+        if (counts[CNT_OVRFAIL]>0)
+          td.ExpandedContent += Utils.MakeCountMsg(counts[CNT_OVRFAIL],"\n* Failed to overwrite {0} material{1}");
+        break;
+
+      case TaskDialogResult.CommandLink2:
+        if (!errors && counts[CNT_DEL]==0)
+          td.MainInstruction = "No thread materials were found. Did not delete any materials.";
+        else
+          td.MainInstruction = Utils.MakeCountMsg(counts[CNT_DEL],"Deleted {0} thread material{1}.");
+        td.ExpandedContent += Utils.MakeCountMsg(counts[CNT_DEL],"\n* Deleted {0} material{1}");
+        if (counts[CNT_DELFAIL]>0)
+          td.ExpandedContent += Utils.MakeCountMsg(counts[CNT_DELFAIL],"\n* Failed to delete {0} material{1}");
+        break;
+
+      default:
+        Debug.Assert(false); // SHould be unreachable 
+        break;
+    }
+ 
+    // Show task dialog
+    return td.Show();
   }
   
   #endregion
@@ -579,6 +714,16 @@ public static class ThreadMaterials
   
   #region Workers on Materials
 
+  /// <summary>Returns a thread material name basing on a template material and a thread geometry</summary>
+  /// <param name="vMat">The thread template material to base the name on</param>
+  /// <param name="tgeo">The thread properties to base the name on</param>
+  /// <returns>The name</returns>
+  public static string MakeName(Material vMat, ThreadGeometry tgeo)
+  {
+    string category = VMATS.Match(vMat.Name).Groups[1]+"";   // E.g. "Steel galvanized"
+    return            String.Format(sTMATS,category,tgeo.D); // E.g. "GIMBA - Steel galvanized - M12 thread"
+  }
+  
   /// <summary>Finds thread materials in a Revit document</summary>
   /// <param name="doc">Revit document to find materials in</param>
   /// <param name="filter">Filter for material names to find, a string (to match name exactly) or a Regex</param>
@@ -615,7 +760,7 @@ public static class ThreadMaterials
     
     // Material cannot be null
     if (vMat==null)
-      throw new Exception("Material is <null>"); // TODO: Add solution
+      throw new Exception("Material is <null>");
 
     // Long name to display in messages
     string lname = String.Format("Material \"{0}\"",vMat.Name);
@@ -711,7 +856,7 @@ public static class ThreadMaterials
   /// <param name="tgeo">The thread properties</param>
   /// <returns>The newly created material</returns>
   /// <seealso cref="https://www.revitapidocs.com/2019/96d557aa-e446-49c5-11cd-59fda2459e82.htm"/>
-  private static Material Create(Material vMat, ThreadGeometry tgeo)
+  private static Material Create(string name, Material vMat, ThreadGeometry tgeo)
   {
     string prefix = "- ";
     //Dump.Material(vMat,prefix);
@@ -724,7 +869,6 @@ public static class ThreadMaterials
     // Initialize
     Document doc         = vMat.Document;
     string   category    = VMATS.Match(vMat.Name).Groups[1]+"";   // E.g. "Steel galvanized"
-    string   title       = String.Format(sTMATS,category,tgeo.D); // E.g. "GIMBA - Steel galvanized - M12 thread"
     string   description = String.Format(                         // E.g. "Generic ISO metric bolt assembly, steel galvanized with M12 tread"
                              "Generic ISO metric bolt assembly: {0} with M{1} tread", 
                              category,tgeo.D
@@ -736,10 +880,10 @@ public static class ThreadMaterials
     AppearanceAssetElement vAppAssElem   = doc.GetElement(vAppAssElemId) as AppearanceAssetElement;
   
     // - Duplicate the material
-    Material tMat = vMat.Duplicate(title);
+    Material tMat = vMat.Duplicate(name);
 
     // - Duplicate the appearance asset and the asset(s) in it
-    AppearanceAssetElement tAppAssElem = vAppAssElem.Duplicate(title);
+    AppearanceAssetElement tAppAssElem = vAppAssElem.Duplicate(name);
 
     // - Assign the asset element to the material
     tMat.AppearanceAssetId = tAppAssElem.Id;
@@ -785,6 +929,7 @@ public static class ThreadMaterials
 	public static void MacroMain(Document doc)
 	{
     Debug.Assert(doc!=null);
+    int[] counts = new int[ThreadMaterials.CNT_MAX];
 
     // Pre-Checks: Try to make sure that actual operation will not fail
     Log.WL();
@@ -795,21 +940,23 @@ public static class ThreadMaterials
     IList<ThreadGeometry> tgeos = ThreadGeometry.getList();
     foreach (ThreadGeometry tgeo in tgeos)
       Log.WL("   - "+tgeo);
+    counts[CNT_TGEO] = tgeos.Count;
 
     // - Find exisiting thread materials
     Log.WL("- Searching existing thread materials");
     IList<Material> tMats = ThreadMaterials.Find(doc,ThreadMaterials.TMATS).ToList();
     foreach (Material tMat in tMats)
       Log.WL(String.Format("   - Material \"{0}\"",tMat.Name));
+    counts[CNT_TMAT] = tMats.Count;
 
     // - Find and check template materials
     Log.WL("- Searching and checking thread template materials");
     IList<Material> vMats = ThreadMaterials.Find(doc,ThreadMaterials.VMATS).ToList();
-    List<Material> vMatsValid = new List<Material>(vMats);
     foreach (Material vMat in vMats)
       try
       {
         ThreadMaterials.CheckTemplate(vMat);
+        counts[CNT_VMAT]++;
       }
       catch (Exception e)
       {
@@ -817,17 +964,18 @@ public static class ThreadMaterials
         if (vMat!=null) vMatName = vMat.Name;
         Log.WL("Check failed on template material \""+vMatName+"\"");
         Log.WL(e.ToString());
-        vMatsValid.Remove(vMat);
+        vMats.Remove(vMat);
+        counts[CNT_VMAT_INVAL]++;
       }
       
     // - Final checks
     string stgeos = "  - Found {0} thread geometr{1}";
     string stMats = "  - Found {0} existing thread material{1}";
     string svMats = "  - Found {0} valid template material{1}";
-    stgeos = Log.MakeCountOkMsg(tgeos.Count,tgeos.Count>0,stgeos,"ies","y");
-    stMats = Log.MakeCountOkMsg(tMats.Count,true,stMats);
-    svMats = Log.MakeCountOkMsg(vMatsValid.Count,vMatsValid.Count>0,svMats);
-    if (vMatsValid.Count>0 && tgeos.Count>0)
+    stgeos = Utils.MakeCountOkMsg(counts[CNT_TGEO],counts[CNT_TGEO]>0,stgeos,"ies","y");
+    stMats = Utils.MakeCountOkMsg(counts[CNT_TMAT],true,stMats);
+    svMats = Utils.MakeCountOkMsg(counts[CNT_VMAT],counts[CNT_VMAT]>0,svMats);
+    if (counts[CNT_VMAT]>0 && counts[CNT_TGEO]>0)
       Log.WL("- PRE-CHECK OK");
     else
       Log.WL("- PRE-CHECK FAILED");
@@ -838,19 +986,15 @@ public static class ThreadMaterials
     // Do welcome dialog
     Log.WL();
     Log.WL("Welcome dialog...");
-    bool createVmats = false;
-    bool deleteVmats = false;
-    TaskDialog td = new TaskDialog("?");
-    switch (ThreadMaterials.DoWelcomeDialog(td,doc,tgeos,tMats,vMats,vMatsValid))
+    TaskDialog       td  = new TaskDialog("?");
+    TaskDialogResult cmd = ThreadMaterials.DoWelcomeDialog(td,doc,counts);
+    switch (cmd)
     {
       case TaskDialogResult.CommandLink1:
         Log.WL("- Create Thread Materials operation selected by user");
-        createVmats = true;
-        try { deleteVmats = td.WasVerificationChecked(); } catch (Exception e) {}
         break;
       case TaskDialogResult.CommandLink2:
         Log.WL("- Delete Thread Materials operation selected by user");
-        deleteVmats = true;
         break;
       default:
         Log.WL("- Cancelled by user");
@@ -858,64 +1002,98 @@ public static class ThreadMaterials
     }
 
     // Main procedure
-    string transactionName = (createVmats ? "Create" : "Delete") + " Thread Materials";
+    counts = new int[ThreadMaterials.CNT_MAX];
+    string transactionName = (cmd==TaskDialogResult.CommandLink1 ? "Create" : "Delete") 
+                           + " Thread Materials";
     Log.WL();
     Log.WL("Starting transaction \""+transactionName+"\"");
-    List<string>   tMatsDeleted      = new List<string  >();
-    List<Material> tMatsCreated      = new List<Material>();
-    List<Material> tMatsDeleteFailed = new List<Material>();
-    List<string>   tMatsCreateFailed = new List<string  >();
     using (Transaction t=new Transaction(doc,transactionName))
     {
       // - Start transaction
       t.Start();
 
-      if (deleteVmats)
+      switch (cmd)
       {
-        // - Delete materials
-        Log.WL();
-        Log.WL("Deleting thread materials");
-        foreach (Material tMat in tMats)
-        {
-          string tMatName = tMat.Name;
-          try
-          {
-            ThreadMaterials.Delete(tMat);
-            tMatsDeleted.Add(tMatName);
-          }
-          catch (Exception e)
-          {
-            tMatsDeleteFailed.Add(tMat);
-            Log.WL(String.Format("  Failed to delete thread material \"{0}\"",tMatName));
-            Log.WL(e.ToString());
-          }
-        }
-      }
+        case TaskDialogResult.CommandLink1:
+          // - Create materials
+          Log.WL();
+          Log.WL("Creating thread materials");
+          bool overwrite = false;
+          try { overwrite = td.WasVerificationChecked(); } catch {}
+          
+          foreach (Material vMat in vMats)
+            foreach (ThreadGeometry tgeo in tgeos)
+            {
+              string tMatName = ThreadMaterials.MakeName(vMat,tgeo);
 
-      if (createVmats)
-      {
-        // - Create materials
-        Log.WL();
-        Log.WL("Creating thread materials");
-        
-        foreach (Material vMat in vMatsValid)
-          foreach (ThreadGeometry tgeo in tgeos)
+              // - Find existing material of same name
+              Material oMat = null;
+              try { oMat = ThreadMaterials.Find(doc,tMatName).ToList()[0]; } catch {};
+
+              // - Remove old material of same name
+              if (overwrite && oMat!=null)
+                try
+                {
+                  ThreadMaterials.Delete(oMat);
+                  oMat = null;
+                  counts[CNT_OVR]++;
+                }
+                catch (Exception e)
+                {
+                  Log.WL("  Failed to remove \""+tMatName+"\"");
+                  Log.WL(e.ToString());
+                  counts[CNT_OVRFAIL]++;
+                }
+
+              // - Create new material
+              if (oMat==null)
+                try
+                {
+                  Material tMat = ThreadMaterials.Create(tMatName,vMat,tgeo);
+                  if (!overwrite) counts[CNT_CRE]++;
+                }
+                catch (Exception e)
+                {
+                  Log.WL("  Failed to create \""+tMatName+"\"");
+                  Log.WL(e.ToString());
+                  if (overwrite)
+                    counts[CNT_OVRFAIL]++;
+                  else
+                    counts[CNT_CREFAIL]++;
+                }
+              else
+              {
+                Log.WL("- Skip existing material \""+oMat.Name+"\"");
+                counts[CNT_SKIP]++;
+              }
+            }
+          break;
+
+        case TaskDialogResult.CommandLink2:
+          // - Delete materials
+          Log.WL();
+          Log.WL("Deleting thread materials");
+          foreach (Material tMat in tMats)
+          {
+            string tMatName = tMat.Name;
             try
             {
-              Material tMat = ThreadMaterials.Create(vMat,tgeo);
-              tMatsCreated.Add(tMat);
+              ThreadMaterials.Delete(tMat);
+              counts[CNT_DEL]++;
             }
             catch (Exception e)
             {
-              string stMatName = String.Format(
-                                   "thread material M{0} from template {1}",
-                                   tgeo.D,
-                                   vMat.Name
-                                 );
-              tMatsCreateFailed.Add(stMatName);
-              Log.WL("  Failed to create "+stMatName);
+              Log.WL(String.Format("  Failed to delete thread material \"{0}\"",tMatName));
               Log.WL(e.ToString());
+              counts[CNT_DELFAIL]++;
             }
+          }
+          break;
+        
+        default:
+          // Should be unreachable!
+          Debug.Assert(false);
+          break;
       }
 
       Log.WL();
@@ -926,7 +1104,8 @@ public static class ThreadMaterials
   	// Do wrap-up dialog
     Log.WL();
     Log.WL("Wrap-up");
-//    DoWrapupDialog();
+    td = new TaskDialog("?");
+    ThreadMaterials.DoWrapupDialog(td,doc,cmd,counts);
 	}
 
 	#endregion
@@ -1019,7 +1198,7 @@ namespace GIMBA
       }
     }
 
-//    public void TEST()
+//    public void Debug()
 //    {
 //      // Out of service
 //    }
