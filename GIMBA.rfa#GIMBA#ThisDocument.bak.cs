@@ -10,6 +10,10 @@
 //     https://www.revitapidocs.com/2022/
 // [3] C# Language Reference
 //     https://docs.microsoft.com/en-us/dotnet/csharp/language-reference
+// [4] .NET API Documentation, Method PropertyInfo.GetValue
+//     https://docs.microsoft.com/de-de/dotnet/api/system.reflection.propertyinfo.getvalue?view=net-5.0
+// [5] The Building Coder. Material, Physical and Thermal Assets. Nov. 2019. Retrieved May 2021.
+//     https://thebuildingcoder.typepad.com/blog/2019/11/material-physical-and-thermal-assets.html
 
 using System;                           // For Object, Exception, etc.
 using System.Diagnostics;               // For Process.Start
@@ -83,8 +87,6 @@ public class Utils
     return s + (condition ? " --> ok" : " --> NOT OK");
   }
 
-  #endregion
-
   /// <summary>Creates a hyperlink to the module help page</summary>
   /// <param name="doc">The Revit document this module is residing in</param>
   /// <param name="text">The link text</param>
@@ -93,6 +95,8 @@ public class Utils
     string path = Path.Combine(Path.GetDirectoryName(doc.PathName),"GIMBA.html");
     return "<a href=\""+path+"\">"+text+"</a>";
   }
+
+  #endregion
 
 }
 
@@ -141,8 +145,8 @@ public class Log
       
       // Backup this source file (Revit cost me 10 hours of wirking yesterday... :((
       string ts = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-      File.Copy(Utils.GetThisFilePath(),Path.Combine(path,"GIMBA.rfa#ThisDocument.bak.cs"),true);
-      File.Copy(Utils.GetThisFilePath(),Path.Combine(path,"GIMBA.rfa#ThisDocument.bak-"+ts+".cs"),true);
+      File.Copy(Utils.GetThisFilePath(),Path.Combine(path,"GIMBA.rfa#GIMBA#ThisDocument.bak.cs"),true);
+      File.Copy(Utils.GetThisFilePath(),Path.Combine(path,"GIMBA.rfa#GIMBA#ThisDocument.bak-"+ts+".cs"),true);
     }
     catch (Exception e)
     {
@@ -173,212 +177,16 @@ public class Log
     fw.Close(); 
   }
 
-  /// <summary>Finishes with the log and shows a dialog informing the user on the task completion
-  /// status including any errors.</summary>
-  /// <param name="e">Top level exception to report on (optional)</param>
-  public static void End(Exception e=null)
+  /// <summary>Finishes with the log</summary>
+  public static void End()
   {
     // Finish the log file
-    if (e!=null)
-      WL(e.ToString());
     WL();
     WL("Pass complete");
   }
 
   #endregion
 
-}
-
-/// <summary>Provides text dumps of Revit materials and assets</summary>
-/// <seealso href="https://thebuildingcoder.typepad.com/blog/2019/11/material-physical-and-thermal-assets.html"
-///   The Building Coder. Material, Physical and Thermal Assets. Nov. 2019. Retrieved May 2021.></seealso>
-/// <seealso href="https://docs.microsoft.com/de-de/dotnet/api/system.reflection.propertyinfo.getvalue?view=net-5.0"
-///   Microsoft. .NET API Documentation, Method PropertyInfo.GetValue. Retrieved May 2021.></seealso>
-public static class Dump
-{
-  /// <summary>Writes one line of text. Modify this method to write to a file or whatever</summary>
-  /// <param name="line">The text line to write</param>
-  public static void WriteLine(string line="")
-  {
-    //Console.WriteLine(line);
-    Log.WL(line);
-  }
-  
-  /// <summary>Text dump of a Revit parameter</summary>
-  /// <param name="aprop">The parameter</param>
-  /// <param name="prefix">Output line prefix, default is an empty string</param>
-  public static void Parameter(Parameter param, string prefix="")
-  {
-    // TODO: Implement Dump.Parameter(...)!
-  }
-  
-  /// <summary></summary>Text dump of a C# property</summary>
-  /// <param name="pi">The property</param>
-  /// <param name="obj">The instance for which tp display the property</param> 
-  /// <param name="prefix">Output line prefix, default is an empty string</param>
-  /// <param name="pn">Alternative name of property, default is <c>pi.Name</c></param>
-  /// <param name="pt">Alternative type name of property, default is <c>pi.PropertyType.Name</c></param>
-  public static void Property(PropertyInfo pi, Object obj, string prefix="", string pn=null, string pt=null)
-  {
-    Debug.Assert(pi!=null);
-
-    string n = String.IsNullOrEmpty(pn) ? pi.Name : pn;
-    string t = String.IsNullOrEmpty(pt) ? pi.PropertyType.Name : pt;
-    if (pi.GetIndexParameters().Length==0)
-    {
-      Object v = pi.GetValue(obj);
-      Dump.WriteLine(prefix+String.Format("{0} ({1}): {2}",n,t,v));
-    }
-    else
-      // TODO: Listing?
-      Dump.WriteLine(prefix+String.Format("{0} ({1}): -indexed-",n,"?")); 
-  }
-
-  /// <summary>Simplified text dump of a Revit asset property</summary>
-  /// <param name="aprop">The asset property</param>
-  /// <param name="prefix">Output line prefix, default is an empty string</param>
-  public static void AssetProperty(AssetProperty ap, string prefix="")
-  {
-    Debug.Assert(ap!=null);
-    
-    // Dump (ordinary) properties if asset property object
-    PropertyInfo[] pis = ap.GetType().GetProperties();      // Retrieve all properties of asset propery object
-    PropertyInfo   piv = ap.GetType().GetProperty("Value"); // "Value" property of asset property object (if any)
-
-    if (piv!=null)
-      // Skip all properties except "Value"
-      Dump.Property(piv,ap,prefix,ap.Name+".Value",ap.Type.ToString());
-    else
-    {
-      // Dump all properties
-      string t = ap.GetType().Name;
-      string n = ap.Name;
-      Dump.WriteLine(prefix+String.Format("{0} ({1})",n,t));
-      foreach (PropertyInfo pi in pis)
-        Dump.Property(pi,ap,"  "+prefix);
-    }
-    
-    // Rest will be indented one level more further
-    prefix = "  "+prefix;
-
-    // Dump connected properties
-    if (ap.NumberOfConnectedProperties>0)
-    {
-      Dump.WriteLine(prefix+"<Connected Properties>");
-      foreach (AssetProperty apc in ap.GetAllConnectedProperties())
-        Dump.AssetProperty(apc,"  "+prefix);
-    }
-
-    // Dump single connected asset
-    Asset sca = ap.GetSingleConnectedAsset();
-    if (sca!=null)
-    {
-      Dump.WriteLine(prefix+"<Single Connected Asset>");
-      Dump.Asset(sca,"  "+prefix);
-    }
-  }
-
-  /// <summary>Text dump of a Revit asset</summary>
-  /// <param name="asset">The asset</param>
-  /// <param name="prefix">Output line prefix, default is an empty string</param>
-  public static void Asset(Asset asset, string prefix="")
-  {
-    Debug.Assert(asset!=null);
-    
-    // Dump ordinary properties
-    Dump.WriteLine(prefix+"<Ordinary Properties>");
-    PropertyInfo[] pis = asset.GetType().GetProperties();
-    foreach (PropertyInfo pi in pis)       
-      Dump.Property(pi,asset,"  "+prefix);
-
-    // Dump asset properties
-      Dump.WriteLine(prefix+"<Asset Properties>");
-    for (int i=0; i<asset.Size; i++)
-      Dump.AssetProperty(asset[i],"  "+prefix);
-
-    // Dump connected properties
-    if (asset.NumberOfConnectedProperties>0)
-    {
-      Dump.WriteLine(prefix+"<Connected Properties>");
-      foreach (AssetProperty apc in asset.GetAllConnectedProperties())
-        Dump.AssetProperty(apc,"  "+prefix);
-    }
-
-    // Dump single connected asset
-    Asset sca = asset.GetSingleConnectedAsset();
-    if (sca!=null)
-    {
-      Dump.WriteLine(prefix+"<Single Connected Asset>");
-      Dump.Asset(sca,"  "+prefix);
-    }
-  }
-
-  /// <summary>Text dump of a Revit material</summary>
-  /// <param name="material">The material</param>
-  /// <param name="prefix">Output line prefix, default is an empty string</param>
-  public static void Material(Material material, string prefix="")
-  {
-    Debug.Assert(material!=null);
-
-    try
-    {
-      Dump.WriteLine(prefix+String.Format("Material \"{0}\"",material.Name));
-      prefix = "  "+prefix;
-
-      Document doc = material.Document;
-      Dump.WriteLine(prefix+String.Format("<Document PathName>: {0}",doc.PathName));
-      
-          // Dump ordinary properties
-      Dump.WriteLine(prefix+"<Ordinary Properties>");
-      PropertyInfo[] pis = material.GetType().GetProperties();
-      foreach (PropertyInfo pi in pis)       
-        Dump.Property(pi,material,"  "+prefix);
-   
-      // Appearance (Rendering) Asset
-      string s = "<Appearance Asset>";
-      AppearanceAssetElement appearanceElement = doc.GetElement(material.AppearanceAssetId) as AppearanceAssetElement;
-      if (appearanceElement!=null)
-      {
-        Dump.WriteLine(prefix+s);
-        Asset appearanceAsset = appearanceElement.GetRenderingAsset();
-        Dump.Asset(appearanceAsset,"  "+prefix);
-      }
-      else
-        Dump.WriteLine(prefix+s+": -none-");
-  
-      // Physical (Structural) Asset
-      s = "<Physical Asset>";
-      PropertySetElement physicalPropSet = doc.GetElement(material.StructuralAssetId) as PropertySetElement;
-      if (physicalPropSet!=null)
-      {
-        StructuralAsset physicalAsset = physicalPropSet.GetStructuralAsset();
-        Dump.WriteLine("  "+prefix+"Name: "+physicalAsset.Name);
-        ICollection<Parameter> physicalParameters = physicalPropSet.GetOrderedParameters();
-        foreach (Parameter p in physicalParameters)
-          Dump.Parameter(p,"  "+prefix);
-      }
-      else
-        Dump.WriteLine(prefix+s+": -none-");
-  
-      // Thermal Asset
-      s = "<Thermal Asset>";
-      PropertySetElement thermalPropSet = doc.GetElement(material.ThermalAssetId) as PropertySetElement;
-      if (thermalPropSet!=null)
-      {
-        ThermalAsset thermalAsset = thermalPropSet.GetThermalAsset();
-        Dump.WriteLine("  "+prefix+"Name: "+thermalAsset.Name);
-        ICollection<Parameter> thermalParameters = thermalPropSet.GetOrderedParameters();
-        foreach (Parameter p in thermalParameters)
-          Dump.Parameter(p,"  "+prefix);
-      }
-      else
-        Dump.WriteLine(prefix+s+": -none-");
-    }
-    catch (Exception e)
-    {
-      Dump.WriteLine(e.ToString());
-    }
-  }
 }
 
 /// <summary>ISO metric thread properties object</summary>
@@ -573,8 +381,11 @@ public static class ThreadMaterials
                        + svvMats + "\n"
                        + sivMats;
     if (!ready)
+    {
+      td.MainIcon        =  TaskDialogIcon.TaskDialogIconWarning;
       td.ExpandedContent += "\n\n"
                          +  "Issues marked with \"NOT OK\" obstruct operation.";
+    }
    
     // Configure task dialog    
     td.MainInstruction   = "This macro performs batch operations on ISO metric "
@@ -617,7 +428,7 @@ public static class ThreadMaterials
     {
       // - Pre-checks failed: nothing can be done
       td.Title            = "Pre-Checks Failed";
-      td.MainInstruction += "Pre-checks failed. No operation is possible on document.";
+      td.MainInstruction += "Pre-checks failed, however. No operation is possible on document.";
       td.FooterText      += " - "+Log.MakeLogFileLink("View log file");
       td.MainContent     += "See details and log file for further information.";
       td.CommonButtons    = TaskDialogCommonButtons.Close;
@@ -897,7 +708,6 @@ public static class ThreadMaterials
 
       // - Edit appearance asset properties
       string keyword = GetAP<AssetPropertyString>(tAppAss,"keyword").Value;
-      //GetAP<AssetPropertyString>(tAppAss,"category"   ).Value = category;
       GetAP<AssetPropertyString>(tAppAss,"description").Value = description;
       GetAP<AssetPropertyString>(tAppAss,"keyword"    ).Value = keyword+String.Format(":M{0}",tgeo.D);
 
@@ -1179,31 +989,42 @@ namespace GIMBA
 
     #endregion
 
+    #region User Interface
+    
+    public void DoErrorWrapupDialog(Exception e)
+    {
+      TaskDialog td      = new TaskDialog("An Error Occurred");
+      td.MainInstruction = "An unrecoverable error occured executing the macro.";
+      td.MainContent     = "See details and log file for more infromation.";
+      td.ExpandedContent = e.ToString();
+      td.CommonButtons   = TaskDialogCommonButtons.Close;
+      td.MainIcon        = TaskDialogIcon.TaskDialogIconError;
+      td.Show();
+    }
+    
+    #endregion
+    
     #region Revit macro handlers
 
     public void Thread_Materials()
     {
       Document doc = GetActiveDocument();
-      Log.Begin("Thread_Materials",doc);
+      Log.Begin("Thread_Materials",doc); // TODO: Use this document!?
       try
       {
         CheckDocument(doc);
         ThreadMaterials.MacroMain(doc);
-        Log.End();
       }
       catch (Exception e)
       {
-        // TODO: Show error dialog!
-        Log.End(e);
+        Log.WL(e.ToString());
+        DoErrorWrapupDialog(e);
       }
+      Log.End();
     }
 
-//    public void Debug()
-//    {
-//      // Out of service
-//    }
-
     #endregion		
+
 	}
 }
 
