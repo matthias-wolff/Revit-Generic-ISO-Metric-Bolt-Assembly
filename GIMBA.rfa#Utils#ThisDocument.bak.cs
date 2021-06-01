@@ -43,8 +43,13 @@ public static class Dump
     if (param==null)
       return Dump.WriteLine("<null> (Parameter)");
     
-    // TODO: Implement Dump.Parameter(...)!
-    return "";
+    string dump = "";
+    string n = param.Definition.Name;
+    string t = param.StorageType.ToString();
+    string v = param.AsValueString();
+    dump += Dump.WriteLine(prefix+String.Format("{0} ({1}): {2}",n,t,v));
+    
+    return dump;
   }
   
   /// <summary></summary>Text dump of a C# property</summary>
@@ -58,19 +63,27 @@ public static class Dump
     if (pi==null)
       return Dump.WriteLine("<null> (PropertyInfo)");
 
-    string dump = "";
+    string d = "";
+    int    l = pi.GetIndexParameters()!=null ? pi.GetIndexParameters().Length : 0;
     string n = String.IsNullOrEmpty(pn) ? pi.Name : pn;
-    string t = String.IsNullOrEmpty(pt) ? pi.PropertyType.Name : pt;
-    if (pi.GetIndexParameters().Length==0)
+    string t = String.IsNullOrEmpty(pt) ? pi.PropertyType+"" : pt;
+    object v = null;
+    if (l==0)
     {
-      Object v = pi.GetValue(obj);
-      dump += Dump.WriteLine(prefix+String.Format("{0} ({1}): {2}",n,t,v));
+      v  = pi.GetValue(obj);
+      d += Dump.WriteLine(prefix+String.Format("{0} ({1}): {2}",n,t,v));
     }
     else
-      // TODO: Implement indexed properties in Dump.Property()
-      dump += Dump.WriteLine(prefix+String.Format("{0} ({1}): -indexed-",n,"?")); 
+      foreach (ParameterInfo pari in pi.GetIndexParameters())
+      {
+        int i = pari.Position;
+        n = pari.Name;
+        t = pari.ParameterType.Name;
+        v = "<value ???>"; //TODO This does not work: pi.GetValue(obj, new object[] { i });
+        d += Dump.WriteLine(prefix+String.Format("{0}[{1}] ({2}): {3}",n,i,t,v)); 
+      }
     
-    return dump;
+    return d;
   }
 
   /// <summary>Simplified text dump of a Revit asset property</summary>
@@ -81,7 +94,7 @@ public static class Dump
     if (ap==null)
       return Dump.WriteLine("<null> (AssetProperty)");
     
-    string dump = "";
+    string d = "";
     
     // Dump (ordinary) properties if asset property object
     PropertyInfo[] pis = ap.GetType().GetProperties();      // Retrieve all properties of asset propery object
@@ -89,15 +102,55 @@ public static class Dump
 
     if (piv!=null)
       // Skip all properties except "Value"
-      dump += Dump.ToString(piv,ap,prefix,ap.Name+".Value",ap.Type.ToString());
+      d += Dump.ToString(piv,ap,prefix,ap.Name+".Value",ap.Type.ToString());
     else
     {
       // Dump all properties
       string t = ap.GetType().Name;
       string n = ap.Name;
-      dump += Dump.WriteLine(prefix+String.Format("{0} ({1})",n,t));
-      foreach (PropertyInfo pi in pis)
-        dump += Dump.ToString(pi,ap,"  "+prefix);
+
+      if (ap is AssetPropertyList)
+      {
+        // Special case: asset property list -> dump properties
+        d += Dump.WriteLine(prefix+String.Format("{0} ({1})",n,t));
+        AssetPropertyList apl = ap as AssetPropertyList;
+        foreach (AssetProperty ap2 in apl.GetValue())
+          d += Dump.ToString(ap2,"  "+prefix);
+      }
+      else if (ap is AssetPropertyDoubleArray2d)
+      {
+        // Special case: 2x double array -> pretty-print
+        IList<Double> l = (ap as AssetPropertyDoubleArray4d).GetValueAsDoubles();
+        d += Dump.WriteLine(prefix+String.Format(
+          "{0} ({1}): [{2}, {3}]",n,t,
+          l.ElementAt(0), l.ElementAt(1)
+         ));
+      }
+      else if (ap is AssetPropertyDoubleArray3d)
+      {
+        // Special case: 2x double array -> pretty-print
+        IList<Double> l = (ap as AssetPropertyDoubleArray4d).GetValueAsDoubles();
+        d += Dump.WriteLine(prefix+String.Format(
+          "{0} ({1}): [{2}, {3}, {4}]",n,t,
+          l.ElementAt(0), l.ElementAt(1), l.ElementAt(1)
+         ));
+      }
+      else if (ap is AssetPropertyDoubleArray4d)
+      {
+        // Special case: 4x double array -> pretty-print
+        IList<Double> l = (ap as AssetPropertyDoubleArray4d).GetValueAsDoubles();
+        d += Dump.WriteLine(prefix+String.Format(
+          "{0} ({1}): [{2}, {3}, {4}, {5}]",n,t,
+          l.ElementAt(0), l.ElementAt(1), l.ElementAt(2), l.ElementAt(3)
+         ));
+      }
+      else
+      {
+        // Gernel case: Dump C# properties
+        d += Dump.WriteLine(prefix+String.Format("{0} ({1})",n,t));
+        foreach (PropertyInfo pi in pis)
+          d += Dump.ToString(pi,ap,"  "+prefix);
+      }
     }
     
     // Rest will be indented one level more further
@@ -106,20 +159,20 @@ public static class Dump
     // Dump connected properties
     if (ap.NumberOfConnectedProperties>0)
     {
-      dump += Dump.WriteLine(prefix+"<Connected Properties>");
+      d += Dump.WriteLine(prefix+"<Connected Properties>");
       foreach (AssetProperty apc in ap.GetAllConnectedProperties())
-        dump += Dump.ToString(apc,"  "+prefix);
+        d += Dump.ToString(apc,"  "+prefix);
     }
 
     // Dump single connected asset
     Asset sca = ap.GetSingleConnectedAsset();
     if (sca!=null)
     {
-      dump += Dump.WriteLine(prefix+"<Single Connected Asset>");
-      dump += Dump.ToString(sca,"  "+prefix);
+      d += Dump.WriteLine(prefix+"<Single Connected Asset>");
+      d += Dump.ToString(sca,"  "+prefix);
     }
     
-    return dump;
+    return d;
   }
 
   /// <summary>Text dump of a Revit asset</summary>
@@ -130,36 +183,88 @@ public static class Dump
     if (asset==null)
       return Dump.WriteLine("<null> (Asset)");
 
-    string dump = "";
+    string d = "";
 
     // Dump ordinary properties
-    dump += Dump.WriteLine(prefix+"<Ordinary Properties>");
+    d += Dump.WriteLine(prefix+"<Ordinary Properties>");
     PropertyInfo[] pis = asset.GetType().GetProperties();
     foreach (PropertyInfo pi in pis)       
-      dump += Dump.ToString(pi,asset,"  "+prefix);
+      d += Dump.ToString(pi,asset,"  "+prefix);
 
     // Dump asset properties
-    dump += Dump.WriteLine(prefix+"<Asset Properties>");
+    d += Dump.WriteLine(prefix+"<Asset Properties>");
     for (int i=0; i<asset.Size; i++)
-      dump += Dump.ToString(asset[i],"  "+prefix);
+      d += Dump.ToString(asset[i],"  "+prefix);
 
     // Dump connected properties
     if (asset.NumberOfConnectedProperties>0)
     {
-      dump += Dump.WriteLine(prefix+"<Connected Properties>");
+      d += Dump.WriteLine(prefix+"<Connected Properties>");
       foreach (AssetProperty apc in asset.GetAllConnectedProperties())
-        dump += Dump.ToString(apc,"  "+prefix);
+        d += Dump.ToString(apc,"  "+prefix);
     }
 
     // Dump single connected asset
     Asset sca = asset.GetSingleConnectedAsset();
     if (sca!=null)
     {
-      dump += Dump.WriteLine(prefix+"<Single Connected Asset>");
-      dump += Dump.ToString(sca,"  "+prefix);
+      d += Dump.WriteLine(prefix+"<Single Connected Asset>");
+      d += Dump.ToString(sca,"  "+prefix);
     }
-    
-    return dump;
+
+    return d;
+  }
+
+  /// <summary>Text dump of a Revit structural (phyical) asset</summary>
+  /// <param name="asset">The structural asset</param>
+  /// <param name="physicalPropSet">The physical property set element</param>
+  /// <param name="prefix">Output line prefix, default is an empty string</param>
+  public static string ToString(StructuralAsset asset, PropertySetElement physicalPropSet, string prefix="")
+  {
+    if (asset==null)
+      return Dump.WriteLine("<null> (Asset)");
+
+    string d = "";
+
+    // Dump ordinary properties
+    d += Dump.WriteLine(prefix+"<Ordinary Properties>");
+    PropertyInfo[] pis = asset.GetType().GetProperties();
+    foreach (PropertyInfo pi in pis)       
+      d += Dump.ToString(pi,asset,"  "+prefix);
+
+    // Dump thermal asset parameters
+    d += Dump.WriteLine(prefix+"<Parameters>");
+    ICollection<Parameter> parameters = physicalPropSet.GetOrderedParameters();
+    foreach (Parameter p in parameters)
+      d += Dump.ToString(p,"  "+prefix);
+
+    return d;
+  }
+
+  /// <summary>Text dump of a Revit thermal asset</summary>
+  /// <param name="asset">The thermal asset</param>
+  /// <param name="thermalPropSet">The thermal property set element</param>
+  /// <param name="prefix">Output line prefix, default is an empty string</param>
+  public static string ToString(ThermalAsset asset, PropertySetElement thermalPropSet, string prefix="")
+  {
+    if (asset==null)
+      return Dump.WriteLine("<null> (Asset)");
+
+    string d = "";
+
+    // Dump ordinary properties
+    d += Dump.WriteLine(prefix+"<Ordinary Properties>");
+    PropertyInfo[] pis = asset.GetType().GetProperties();
+    foreach (PropertyInfo pi in pis)       
+      d += Dump.ToString(pi,asset,"  "+prefix);
+
+    // Dump thermal asset parameters
+    d += Dump.WriteLine(prefix+"<Parameters>");
+    ICollection<Parameter> parameters = thermalPropSet.GetOrderedParameters();
+    foreach (Parameter p in parameters)
+      d += Dump.ToString(p,"  "+prefix);
+
+    return d;
   }
 
   /// <summary>Text dump of a Revit material</summary>
@@ -170,68 +275,63 @@ public static class Dump
     if (material==null)
       return Dump.WriteLine("<null> (Material)");
 
-    string dump = "";
-    
+    string d = "";
     try
     {
-      dump += Dump.WriteLine(prefix+String.Format("Material \"{0}\"",material.Name));
+      d += Dump.WriteLine(prefix+String.Format("Material \"{0}\"",material.Name));
       prefix = "  "+prefix;
 
       Document doc = material.Document;
-      dump += Dump.WriteLine(prefix+String.Format("<Document PathName>: {0}",doc.PathName));
+      d += Dump.WriteLine(prefix+String.Format("<Document PathName>: {0}",doc.PathName));
       
       // Dump ordinary properties
-      dump += Dump.WriteLine(prefix+"<Ordinary Properties>");
+      d += Dump.WriteLine(prefix+"<Ordinary Properties>");
       PropertyInfo[] pis = material.GetType().GetProperties();
       foreach (PropertyInfo pi in pis)       
-        dump += Dump.ToString(pi,material,"  "+prefix);
+        d += Dump.ToString(pi,material,"  "+prefix);
    
       // Appearance (Rendering) Asset
       string s = "<Appearance Asset>";
       AppearanceAssetElement appearanceElement = doc.GetElement(material.AppearanceAssetId) as AppearanceAssetElement;
       if (appearanceElement!=null)
       {
-        dump += Dump.WriteLine(prefix+s);
+        d += Dump.WriteLine(prefix+s);
         Asset appearanceAsset = appearanceElement.GetRenderingAsset();
-        dump += Dump.ToString(appearanceAsset,"  "+prefix);
+        d += Dump.ToString(appearanceAsset,"  "+prefix);
       }
       else
-        dump += Dump.WriteLine(prefix+s+": -none-");
+        d += Dump.WriteLine(prefix+s+": -none-");
   
       // Physical (Structural) Asset
       s = "<Physical Asset>";
       PropertySetElement physicalPropSet = doc.GetElement(material.StructuralAssetId) as PropertySetElement;
       if (physicalPropSet!=null)
       {
+        d += Dump.WriteLine(prefix+s);
         StructuralAsset physicalAsset = physicalPropSet.GetStructuralAsset();
-        dump += Dump.WriteLine("  "+prefix+"Name: "+physicalAsset.Name);
-        ICollection<Parameter> physicalParameters = physicalPropSet.GetOrderedParameters();
-        foreach (Parameter p in physicalParameters)
-          dump += Dump.ToString(p,"  "+prefix);
+        d += Dump.ToString(physicalAsset,physicalPropSet,"  "+prefix);
       }
       else
-        dump += Dump.WriteLine(prefix+s+": -none-");
+        d += Dump.WriteLine(prefix+s+": -none-");
   
       // Thermal Asset
       s = "<Thermal Asset>";
       PropertySetElement thermalPropSet = doc.GetElement(material.ThermalAssetId) as PropertySetElement;
       if (thermalPropSet!=null)
       {
+        d += Dump.WriteLine(prefix+s);
         ThermalAsset thermalAsset = thermalPropSet.GetThermalAsset();
-        dump += Dump.WriteLine("  "+prefix+"Name: "+thermalAsset.Name);
-        ICollection<Parameter> thermalParameters = thermalPropSet.GetOrderedParameters();
-        foreach (Parameter p in thermalParameters)
-          dump += Dump.ToString(p,"  "+prefix);
+        d += Dump.ToString(thermalAsset,thermalPropSet,"  "+prefix);
       }
       else
-        dump += Dump.WriteLine(prefix+s+": -none-");
+        d += Dump.WriteLine(prefix+s+": -none-");
     }
     catch (Exception e)
     {
-      dump += Dump.WriteLine(e.ToString());
+      d += Dump.WriteLine(e.ToString());
     }
 
-    return dump;
+    return d;
   }
   
   /// <summary>Dumps the properties of all materials in a Revit document to a string</summary>
@@ -251,11 +351,11 @@ public static class Dump
       .ToList();
     
     // - Dump material properties to string
-    string dump = "";
+    string d = "";
     foreach (Material material in materials)
-      dump += Dump.ToString(material,"- ");
+      d += Dump.ToString(material,"- ");
 
-    return dump;
+    return d;
   }
 }
 
@@ -306,7 +406,7 @@ namespace Utils
       // NOTE: Revit 2022 is tending to lose the most recent changes to this source file!
       string thisDocPath = Path.GetDirectoryName(this.Document.PathName);
       string thisDocFile = Path.GetFileName(this.Document.PathName);
-      File.Copy(GetThisFilePath(),Path.Combine(thisDocPath,"GIMBA.rfa#Utils#ThisDocument.bak.cs"),true);
+      File.Copy(GetThisFilePath(),Path.Combine(thisDocPath,thisDocFile+"#Utils#ThisDocument.bak.cs"),true);
       
       // Dump all materials contained in active Revit document
       Document document   = this.Application.ActiveUIDocument.Document;
