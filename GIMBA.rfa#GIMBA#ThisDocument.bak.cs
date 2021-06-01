@@ -31,7 +31,7 @@ using System.Linq;                      // For .Cast, .ToList, etc
 public class Utils
 {
 
-  #region C# Reflection
+  #region Paths and Files
   
   /// <summary>Returns the path if the current C# source file</summary>
   /// <seealso href="https://stackoverflow.com/questions/47841441/how-do-i-get-the-path-to-the-current-c-sharp-source-code-file"
@@ -39,6 +39,22 @@ public class Utils
   public static string GetThisFilePath([CallerFilePath] string path = null)
   {
     return path;
+  }
+  
+  /// <summary>Writes text data to a file</summary>
+  /// <param name="data">The data string to write</param>
+  /// <param name="path">The fully qualified pathname of the file to write</param>
+  /// <param name="overwrite">if <c>true</c>, an exisiting file be overwritten</param>
+  /// <returns><c>true</c> if a previously existing file was overwritten, <c>false</c> otherwise</returns>
+  public static bool WriteTextFile(string data, string path, bool overwrite)
+  {
+    bool fex = File.Exists(path);
+    if (fex && !overwrite) return false;
+    FileStream   fs = new FileStream(path,FileMode.Create,FileAccess.Write);  
+    StreamWriter fw = new StreamWriter(fs);  
+    fw.Write(data);  
+    fw.Close();
+    return fex;
   }
 
   #endregion
@@ -132,9 +148,9 @@ public class Log
 
   #region Log keeping
   
-  /// <summary>Creates a new macro completion information object</summary>
+  /// <summary>Creates a new log</summary>
   /// <param name="name">The macro name</param>
-  /// <param name="doc">The Revit document</param>
+  /// <param name="doc">The Revit document containing this macro</param>
   public static void Begin(string name, Document doc)
   {
     // Try to make log file path in Revit document's folder, use temp folder on errors
@@ -189,101 +205,266 @@ public class Log
 
 }
 
-/// <summary>ISO metric thread properties object</summary>
+/// <summary>ISO metric bolt geometry</summary>
 /// <seealso href="http://www.iso-gewinde.at">Thread Calculator (German)</seealso>
-public class ThreadGeometry
+public class BoltGeometry
 {
+  private static readonly string CsvTlmm = "##LENGTH##MILLIMETERS";
+  private static readonly string CsvToth = "##OTHER##";
+
+  private static readonly string[] materialNames = new string[]{
+    // "Steel", 
+    "Steel galvanized", 
+    // "Steel galvanized yellow-chromated",
+    // "Stainless steel"
+  };
+
+  #region Static Fields
+
+  /// <summary>ISO metric threads dictionary</summary>
+  private static Dictionary<string,BoltGeometry> Geometries;
+
+  #endregion
 
   #region Static API
 
-  /// <summary>ISO metric threads dictionary</summary>
-  private static Dictionary<string,ThreadGeometry> Threads;
-
-  
   /// <summary>Returns the ISO metric threads dictionary.</summary>
   /// <seealso href="http://www.iso-gewinde.at">Thread Calculator (German)</seealso>
-  protected internal static IList<ThreadGeometry> getList()
+  protected internal static IList<BoltGeometry> GetList()
   {
-    if (ThreadGeometry.Threads==null)
+    // Create bolt gemoetries dictionary of not yet exisiting
+    if (BoltGeometry.Geometries==null)
     {
-      ThreadGeometry.Threads = new Dictionary<string,ThreadGeometry>();
-      new ThreadGeometry( 3,0.5 ); // NOTE: Newly created objects register themselves with dictionary
-      new ThreadGeometry( 4,0.7 );
-      new ThreadGeometry( 5,0.8 );
-      new ThreadGeometry( 6,1   );
-      new ThreadGeometry( 8,1.25);
-      new ThreadGeometry(10,1.5 );
-      new ThreadGeometry(12,1.75);
-      new ThreadGeometry(14,2   );
-      new ThreadGeometry(16,2   );
-      new ThreadGeometry(18,2.5 );
-      new ThreadGeometry(20,2.5 );
-      new ThreadGeometry(22,2.5 );
-      new ThreadGeometry(24,3   );
-      new ThreadGeometry(27,3   );
-      new ThreadGeometry(30,3.5 );
-      new ThreadGeometry(33,3.5 );
-      new ThreadGeometry(36,4   );
-      new ThreadGeometry(39,4   );
-      new ThreadGeometry(42,4.5 );
-      new ThreadGeometry(45,4.5 );
-      new ThreadGeometry(48,5   );
-      new ThreadGeometry(52,5   );
-      new ThreadGeometry(56,5.5 );
-      new ThreadGeometry(64,6   );
+      BoltGeometry.Geometries = new Dictionary<string,BoltGeometry>();
+      // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      // Parameter:   |  D|  P  |  s  |  k  |  a   | du1 | du2|  u  | dgl|     cls                                           
+      new BoltGeometry(  3, 0.5 ,  5.5,  2  ,  1.5 ,  3.2,   7, 0.5 ,  10, new double[]{3,4,5,6,8,10,12,16,18,20,22,25,30,35,40,50,60}); 
+      new BoltGeometry(  4, 0.7 ,  7  ,  2.8,  2.1 ,  4.3,   9, 0.8 ,  20, new double[]{4,6,8,10,12,14,16,18,20,22,25,30,35,40,45,50,55,60,65,70,75,80});
+      new BoltGeometry(  5, 0.8 ,  8  ,  3.5,  2.4 ,  5.3,  10, 1   ,  50, new double[]{6,8,10,12,14,16,18,20,22,25,30,35,40,45,50,55,60,65,70,80,90,100});
+      new BoltGeometry(  6, 1   , 10  ,  4  ,  3   ,  6.4,  12, 1.6 ,  50, new double[]{6,8,10,12,14,16,18,20,22,25,28,30,35,40,45,50,55,60,65,70,75,80,85,90,100,110,120,130,140,150});
+      new BoltGeometry(  8, 1.25, 13  ,  5.5,  3.75,  8.4,  16, 1.6 ,  50, new double[]{8,10,12,14,16,18,20,22,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,110,120,130,140,150,160,170,180,190,200});
+      new BoltGeometry( 10, 1.5 , 17  ,  6.4,  4.5 , 10.5,  20, 2   , 100, new double[]{10,12,16,18,20,22,25,28,30,35,40,45,50,55,60,65,70,75,80,85,90,100,110,120,130,140,150,160,170,180,190,200,220,240,280,300});
+      new BoltGeometry( 12, 1.75, 19  ,  8  ,  5.5 , 13  ,  24, 2.5 , 100, new double[]{10,12,16,18,20,22,25,28,30,35,40,45,50,55,60,65,70,75,80,85,90,100,110,120,130,140,150,160,170,180,190,200,220,240,300});
+      new BoltGeometry( 14, 2   , 22  ,  9  ,  6   , 15  ,  28, 2.5 , 100, new double[]{16,20,25,30,35,40,45,50,55,60,65,70,75,80,90,100,110,120,130,140,150,160,170,180,200,220});
+      new BoltGeometry( 16, 2   , 24  , 10  ,  6   , 17  ,  30, 3   , 150, new double[]{12,16,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,280,300,320,340,400,500});
+      new BoltGeometry( 18, 2.5 , 27  , 11.5,  7.5 , 19  ,  34, 3   , 150, new double[]{20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,100,110,120,130,140,150,160,170,180,190,200});
+      new BoltGeometry( 20, 2.5 , 30  , 12.5,  7.5 , 21  ,  37, 3   , 150, new double[]{20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,280,300,360});
+      new BoltGeometry( 22, 2.5 , 32  , 14  ,  7.5 , 23  ,  39, 3   , 150, new double[]{30,35,40,45,50,55,60,65,70,75,80,90,100,110,120,130,140,150,160,170,180,190,200});
+      new BoltGeometry( 24, 3   , 36  , 15  ,  9   , 25  ,  44, 4   , 150, new double[]{25,30,35,40,45,50,55,60,65,70,75,80,85,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,280,300,320,500});
+      new BoltGeometry( 27, 3   , 41  , 17  ,  9   , 28  ,  50, 4   , 150, new double[]{30,40,45,50,55,60,65,70,75,80,85,90,100,110,120,130,140,150,160,170,180,190,200,300});
+      new BoltGeometry( 30, 3.5 , 46  , 19  , 10.5 , 31  ,  56, 4   , 150, new double[]{35,40,45,50,55,60,65,70,75,80,85,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,280,300,320,340,360,380,400,500,600});
+      new BoltGeometry( 33, 3.5 , 50  , 21  , 10.5 , 34  ,  60, 5   , 150, new double[]{40,50,60,65,70,75,80,90,100,110,120,130,140,150,160,170,180,190,200,300});
+      new BoltGeometry( 36, 4   , 55  , 23  , 12   , 37  ,  66, 5   , 150, new double[]{40,45,50,55,60,65,70,75,80,85,90,100,110,120,130,140,150,160,170,180,190,200,220,260,280,300,320,340,400,600});
+      new BoltGeometry( 39, 4   , 60  , 25  , 12   , 40  ,  72, 6   , 150, new double[]{80,90,100,110,120,130,140,150,160,180,190,200});
+      new BoltGeometry( 42, 4.5 , 65  , 26  , 13.5 , 43  ,  78, 7   , 150, new double[]{50,55,60,70,75,80,85,90,100,110,120,130,140,150,160,170,180,190,200,220,250,260,300,360,400});
+      new BoltGeometry( 45, 4.5 , 70  , 28  , 13.5 , 46  ,  85, 7   , 150, new double[]{90,100,110,120,130,140,150});
+      new BoltGeometry( 48, 5   , 75  , 30  , 15   , 50  ,  92, 8   , 150, new double[]{60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,420});
+      new BoltGeometry( 52, 5   , 80  , 33  , 15   , 54  ,  98, 8   , 180, new double[]{150,200});
+      new BoltGeometry( 56, 5.5 , 85  , 35  , 16.5 , 58  , 105, 9   , 180, new double[]{130,140,150,160,170,190,200,220,240,250,260,280,300,380});
+      new BoltGeometry( 64, 6   , 95  , 40  , 18   , 66  , 120, 9   , 250, new double[]{300});
+      // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      // NOTE: Newly created objects register themselves with dictionary
     }
-    return ThreadGeometry.Threads.Values.ToList();
+    
+    // Return dictionary values, i.e., the geometries, as a list
+    return BoltGeometry.Geometries.Values.ToList();
   }
-  
-  /// <summary>Get one thread properties object</summary>
-  /// <param name="D">The nominal thread diameter</param>
-  /// <returns>The thread properties object or <c>null</c> if no object was found</returns>
-  protected internal static ThreadGeometry Get(int D)
+
+  /// <summary>Writes the bolt type catalog file</summary>
+  /// <param name="path">Fully qualified path of type catalog file to write</param>
+  /// <param name="overwrite">If <c>true</c>, a previously existing type catalog file will be overwritten</param>
+  /// <returns><c>true</c> if a previously existing type catalog file was overwritten, <c>false</c> otherwise</returns>
+  public static bool WriteBoltTypeCatalog(string path, bool overwrite)
   {
-    string key = String.Format("M{0}",D);
-    try
-    {
-      return Threads[key];
-    }
-    catch (Exception e)
-    {
-      Log.WL(e.ToString());
-    }
-    return null;                     
+    // TODO: Make CSV Header (";" = German locale)
+    // TODO: Create type definitions
+    // TODO: Write type catalog file
+    return false;
+  }
+
+  /// <summary>Writes the assembly type catalog file</summary>
+  /// <param name="path">Fully qualified path of type catalog file to write</param>
+  /// <param name="overwrite">If <c>true</c>, a previously existing type catalog file will be overwritten</param>
+  /// <returns><c>true</c> if a previously existing type catalog file was overwritten, <c>false</c> otherwise</returns>
+  public static bool WriteAssemblyTypeCatalog(string path, bool overwrite)
+  {
+    // Make CSV Header (";" = German locale)
+    string data 
+      = ";Nominal Diameter"+CsvTlmm
+      + ";Grip Length"     +CsvTlmm
+      + ";Shank"           +CsvToth
+      + ";Large Washer"    +CsvToth
+      + ";Material"        +CsvToth
+      + ";Thread Material" +CsvToth
+      + "\n";
+
+    // Create type definitions
+    foreach (BoltGeometry bg in BoltGeometry.GetList())
+      foreach (bool s in new bool[]{false,true})
+        if (!s || bg.dgl>50)
+          foreach (string m in materialNames)
+            data 
+              = String.Format("M{0}{1}, {2}",bg.D,s?" w/shank":"",m) // Type name
+              + String.Format(";{0}",bg.D  )                         // Nominal diameter
+              + String.Format(";{0}",bg.dgl)                         // Grip length
+              + String.Format(";{0}",s?1:0 )                         // Shank
+              + String.Format(";{0}",1     )                         // Large washer (always)
+              + String.Format(";{0}",m     )                         // Plain material
+              + String.Format(";GIMBA - {0} - M{1} thread",m,bg.D)   // Thread material
+              + "\n";
+
+    // Write type catalog file
+    return Utils.WriteTextFile(data,path,overwrite);
+  }
+
+  /// <summary>Writes the grip-to-length lookup table file</summary>
+  /// <param name="path">Fully qualified path of lookup table file to write</param>
+  /// <param name="overwrite">If <c>true</c>, a previously existing type lookup table file will be overwritten</param>
+  /// <returns><c>true</c> if a previously existing type  lookup table file was overwritten, <c>false</c> otherwise</returns>
+  public static bool WriteG2LTable(string path, bool overwrite)
+  {
+    // TODO: Implement BoltGeometry.WriteG2LTable(...)
+    return false;
+  }
+
+  /// <summary>Writes the nominal diameter to bolt assembly parameters lookup table file</summary>
+  /// <param name="path">Fully qualified path of lookup table file to write</param>
+  /// <param name="overwrite">If <c>true</c>, a previously existing type lookup table file will be overwritten</param>
+  /// <returns><c>true</c> if a previously existing type lookup table file was overwritten, <c>false</c> otherwise</returns>
+  public static bool WriteD2ParamsTable(string folder, bool overwrite)
+  {
+    // TODO: Implement BoltGeometry.WriteD2ParamsTable(...)
+    return false;
+  }
+
+  /// <summary>Writes the diameter to nomimnal diameter lookup table file</summary>
+  /// <param name="path">Fully qualified path of lookup table file to write</param>
+  /// <param name="overwrite">If <c>true</c>, a previously existing type lookup table file will be overwritten</param>
+  /// <returns><c>true</c> if a previously existing type lookup table file was overwritten, <c>false</c> otherwise</returns>
+  public static bool WriteD2DTable(string folder, bool overwrite)
+  {
+    // TODO: Implement BoltGeometry.WriteD2DTable(...)
+    return false;
   }
 
   #endregion
+
+  #region Maco Main Functions
   
-  #region Instance API
+  /// <summary>Manages type catalog and lookup table files for bolts and bolt assemlies.</summary>
+  /// <param name="document">The document this macro resides in</param>
+  public static void CatalogsAndTables(Document document)
+  {
+    string docDir = Path.GetDirectoryName(document.PathName);
+    string btcPth = Path.Combine(docDir,"Generic ISO Metric Bolt.txt"                ); // Bolt type catalog file
+    string atcPth = Path.Combine(docDir,"Generic ISO Metric Bolt Assembly.txt"       ); // Assembly type catalog file
+    string g2lPth = Path.Combine(docDir,"GIMBA -- Grip to Length.csv"                ); // Grip to bolt length lookup table file
+    string d2pPth = Path.Combine(docDir,"GIMBA -- Nominal Diameter to Parameters.csv"); // Nominal diameter to bolt assembly parameters lookup table file
+    string d2dPth = Path.Combine(docDir,"GIMBA -- Diameter to Nominal Diameter.csv"  ); // Diameter to nomimnal diameter lookup table file
+  }
+  
+  #endregion
+  
+  #region Instance Fields
 
   /// <summary>Nominal diameter in millimeters</summary>
-  protected internal int D; 
+  public readonly int D; 
 
-  /// <summary>Thread pitch in millimeters</summary>
-  protected internal double P;
+  /// <summary>Thread pitch in millimeters (DIN 13, DIN ISO 68-1)</summary>
+  public readonly double P;
 
-  /// <summary>Nominal circumference in millimeters</summary>
-  protected internal double u;
+  /// <summary>Wrench size in millimeters (DIN 931, DIN 933)</summary>
+  public readonly double s;
 
-  /// <summary>Thread pitch angle in degrees</summary>
-  protected internal double beta;
+  /// <summary>Height of bolt head and nut in millimeters (DIN 931, DIN 933)</summary>
+  public readonly double k;
 
-  /// <summary>Creates a new ISO metric thread properties object.</summary>
+  /// <summary>Maximum distance from bolt head to thread in millimeters (DIN 933)</summary>
+  public readonly double a;
+
+  /// <summary>Diameter of washer clearance hole in millimeters (DIN 125)</summary>
+  public readonly double du1;
+
+  /// <summary>Washer diameter in millimeters (DIN 125)</summary>
+  public readonly double du2;
+
+  /// <summary>Washer thickness in millimeters (DIN 125)</summary>
+  public readonly double u;
+
+  /// <summary>Default grip length of bolt assembly in millimeters (own definition)</summary>
+  public readonly double dgl;
+  
+  /// <summary>Customary bolt lengths in millimeters</summary>
+  public readonly double[] cls;
+
+  /// <summary>Effective pitch diameter in millimeters (DIN 13, DIN ISO 68-1; computed)</summary>
+  public readonly double d2;
+
+  /// <summary>Thread height in millimeters (DIN 13, DIN ISO 68-1; computed)</summary>
+  public readonly double H;
+
+  /// <summary>Nominal circumference in millimeters (computed)</summary>
+  public readonly double C;
+
+  /// <summary>Thread pitch angle in degrees (computed)</summary>
+  public readonly double beta;
+
+  /// <summary>Minimum thread length in millimeters for bolt lengths &lt; 125 mm (DIN 931, computed)</summary>
+  public readonly double b2;
+
+  /// <summary>Minimum thread length in millimeters for bolt lengths &lt; 200 mm (DIN 931, computed)</summary>
+  public readonly double b3;
+
+  /// <summary>Minimum thread length in millimeters for bolt lengths &gt; 200 mm (DIN 931, computed)</summary>
+  public readonly double b4;
+
+  #endregion
+
+  #region Instance API
+
+  /// <summary>Creates a new ISO metric bolt gemoetry.</summary>
   /// <param name="D">Nominal diameter in millimeters</param>
   /// <param name="P">Thread pitch in millimeters</param>
-  private ThreadGeometry(int D, double P)
+  /// <param name="s">Wrench size in millimeters</param>
+  /// <param name="k">Height of bolt head and nut in millimeters</param>
+  /// <param name="a">Maximum distance from bolt head to thread in millimeters</param>
+  /// <param name="du1">Diameter of washer clearance hole in millimeters</param>
+  /// <param name="du2">Washer diameter in millimeters</param>
+  /// <param name="u">Washer thickness in millimeters</param>
+  /// <param name="dgl">Default grip length of bolt assembly in millimeters</param>
+  /// <param name="cls">Customary bolt lengths in millimeters</param>
+  private BoltGeometry(
+    int D, double P, double s, double k, double a, double du1, double du2, double u, double dgl, double[] cls
+  )
   {
+    // Set field values from arguments
     this.D    = D;
     this.P    = P;
-    this.u    = Math.PI*this.D;
-    this.beta = Math.Atan2(this.P,this.u)*180/Math.PI;
+    this.s    = s;
+    this.k    = k;
+    this.a    = a;
+    this.du1  = du1;
+    this.du2  = du2;
+    this.u    = u;
+    this.dgl  = dgl;
+    this.cls  = cls;
 
-    ThreadGeometry.Threads.Add(String.Format("M{0}",this.D),this);
+    // Cumpute field values from arguments
+    this.d2   = D - 3*Math.Sqrt(3)/8 * P;
+    this.H    = Math.Sqrt(3)/2 * P;
+    this.C    = Math.PI*this.D;
+    this.beta = Math.Atan2(P,C)*180/Math.PI;
+    this.b2   = 2*D + 6;
+    this.b3   = 2*D + 12;
+    this.b4   = 2*D + 25;
+
+    // Register bolt geometry with dictionary
+    BoltGeometry.Geometries.Add(String.Format("M{0}",this.D),this);
   }
 
   public override string ToString()
   {
-    return string.Format("[IMThread D={0}, P={1}, u={2}, beta={3}]", D, P, u, beta);
+    return string.Format("[IMThread D={0}, P={1}, C={2}, beta={3}]", D, P, C, beta);
   }
 
   #endregion
@@ -529,7 +710,7 @@ public static class ThreadMaterials
   /// <param name="vMat">The thread template material to base the name on</param>
   /// <param name="tgeo">The thread properties to base the name on</param>
   /// <returns>The name</returns>
-  public static string MakeName(Material vMat, ThreadGeometry tgeo)
+  public static string MakeName(Material vMat, BoltGeometry tgeo)
   {
     string category = VMATS.Match(vMat.Name).Groups[1]+"";   // E.g. "Steel galvanized"
     return            String.Format(sTMATS,category,tgeo.D); // E.g. "GIMBA - Steel galvanized - M12 thread"
@@ -667,7 +848,7 @@ public static class ThreadMaterials
   /// <param name="tgeo">The thread properties</param>
   /// <returns>The newly created material</returns>
   /// <seealso cref="https://www.revitapidocs.com/2019/96d557aa-e446-49c5-11cd-59fda2459e82.htm"/>
-  private static Material Create(string name, Material vMat, ThreadGeometry tgeo)
+  private static Material Create(string name, Material vMat, BoltGeometry tgeo)
   {
     string prefix = "- ";
     //Dump.Material(vMat,prefix);
@@ -715,7 +896,7 @@ public static class ThreadMaterials
       AssetPropertyReference tMpsRef = GetAP<AssetPropertyReference>(tAppAss,"metal_pattern_shader");
       Asset                  tMpsApp = tMpsRef.GetSingleConnectedAsset();
       GetAP<AssetPropertyDistance>(tMpsApp,"texture_RealWorldScaleX" ).Value = tgeo.P / 25.4;
-      GetAP<AssetPropertyDistance>(tMpsApp,"texture_RealWorldScaleY" ).Value = tgeo.u / 25.4;
+      GetAP<AssetPropertyDistance>(tMpsApp,"texture_RealWorldScaleY" ).Value = tgeo.C / 25.4;
       GetAP<AssetPropertyDouble  >(tMpsApp,"texture_WAngle"          ).Value = 90 - tgeo.beta;
       GetAP<AssetPropertyBoolean >(tMpsApp,"texture_ScaleLock"       ).Value = false;
       GetAP<AssetPropertyBoolean >(tMpsApp,"texture_URepeat"         ).Value = true;
@@ -747,8 +928,8 @@ public static class ThreadMaterials
 
     // - Find and check thread geometries
     Log.WL("- Searching thread geometries");
-    IList<ThreadGeometry> tgeos = ThreadGeometry.getList();
-    foreach (ThreadGeometry tgeo in tgeos)
+    IList<BoltGeometry> tgeos = BoltGeometry.GetList();
+    foreach (BoltGeometry tgeo in tgeos)
       Log.WL("   - "+tgeo);
     counts[CNT_TGEO] = tgeos.Count;
 
@@ -832,7 +1013,7 @@ public static class ThreadMaterials
           try { overwrite = td.WasVerificationChecked(); } catch {}
           
           foreach (Material vMat in vMats)
-            foreach (ThreadGeometry tgeo in tgeos)
+            foreach (BoltGeometry tgeo in tgeos)
             {
               string tMatName = ThreadMaterials.MakeName(vMat,tgeo);
 
@@ -1008,12 +1189,27 @@ namespace GIMBA
 
     public void Thread_Materials()
     {
-      Document doc = GetActiveDocument();
-      Log.Begin("Thread_Materials",doc); // TODO: Use this document!?
+      Log.Begin("Thread_Materials",this.Document);
       try
       {
-        CheckDocument(doc);
-        ThreadMaterials.MacroMain(doc);
+        Document actDoc = GetActiveDocument();
+        CheckDocument(actDoc);
+        ThreadMaterials.MacroMain(actDoc);
+      }
+      catch (Exception e)
+      {
+        Log.WL(e.ToString());
+        DoErrorWrapupDialog(e);
+      }
+      Log.End();
+    }
+    
+    public void Catalogs_And_Tables()
+    {
+      Log.Begin("Catalogs_And_Tables",this.Document);
+      try
+      {
+        BoltGeometry.CatalogsAndTables(this.Document);
       }
       catch (Exception e)
       {
