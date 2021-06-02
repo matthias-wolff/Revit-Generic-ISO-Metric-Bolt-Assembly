@@ -45,16 +45,16 @@ public class Utils
   /// <param name="data">The data string to write</param>
   /// <param name="path">The fully qualified pathname of the file to write</param>
   /// <param name="overwrite">if <c>true</c>, an exisiting file be overwritten</param>
-  /// <returns><c>true</c> if a previously existing file was overwritten, <c>false</c> otherwise</returns>
-  public static bool WriteTextFile(string data, string path, bool overwrite)
+  /// <returns>1 if a new file was created, -1 if an existing file was overwritten, and 0 if an existing file was skipped</returns>
+  public static int WriteTextFile(string data, string path, bool overwrite)
   {
     bool fex = File.Exists(path);
-    if (fex && !overwrite) return false;
+    if (fex && !overwrite) return 0;
     FileStream   fs = new FileStream(path,FileMode.Create,FileAccess.Write);  
     StreamWriter fw = new StreamWriter(fs);  
     fw.Write(data);  
     fw.Close();
-    return fex;
+    return fex ? -1 : 1;
   }
 
   #endregion
@@ -273,27 +273,30 @@ public class BoltGeometry
   /// <summary>Writes the bolt type catalog file</summary>
   /// <param name="path">Fully qualified path of type catalog file to write</param>
   /// <param name="overwrite">If <c>true</c>, a previously existing type catalog file will be overwritten</param>
-  /// <returns><c>true</c> if a previously existing type catalog file was overwritten, <c>false</c> otherwise</returns>
-  public static bool WriteBoltTypeCatalog(string path, bool overwrite)
+  /// <returns>1 if a new file was created, -1 if an existing file was overwritten, and 0 if an existing file was skipped</returns>
+  public static int WriteBoltTypeCatalog(string path, bool overwrite)
   {
     // TODO: Make CSV Header (";" = German locale)
     // TODO: Create type definitions
     // TODO: Write type catalog file
-    return false;
+    return 0;
   }
 
   /// <summary>Writes the assembly type catalog file</summary>
   /// <param name="path">Fully qualified path of type catalog file to write</param>
   /// <param name="overwrite">If <c>true</c>, a previously existing type catalog file will be overwritten</param>
-  /// <returns><c>true</c> if a previously existing type catalog file was overwritten, <c>false</c> otherwise</returns>
-  public static bool WriteAssemblyTypeCatalog(string path, bool overwrite)
+  /// <returns>1 if a new file was created, -1 if an existing file was overwritten, and 0 if an existing file was skipped</returns>
+  public static int WriteAssemblyTypeCatalog(string path, bool overwrite)
   {
+    Log.WL();
+    Log.WL(path);
+    
     // Make CSV Header (";" = German locale)
     string data 
       = ";Nominal Diameter"+CsvTlmm
       + ";Grip Length"     +CsvTlmm
       + ";Shank"           +CsvToth
-      + ";Large Washer"    +CsvToth
+      + ";Large Washers"   +CsvToth
       + ";Material"        +CsvToth
       + ";Thread Material" +CsvToth
       + "\n";
@@ -304,63 +307,216 @@ public class BoltGeometry
         if (!s || bg.dgl>50)
           foreach (string m in materialNames)
             data 
-              = String.Format("M{0}{1}, {2}",bg.D,s?" w/shank":"",m) // Type name
-              + String.Format(";{0}",bg.D  )                         // Nominal diameter
-              + String.Format(";{0}",bg.dgl)                         // Grip length
-              + String.Format(";{0}",s?1:0 )                         // Shank
-              + String.Format(";{0}",1     )                         // Large washer (always)
-              + String.Format(";{0}",m     )                         // Plain material
-              + String.Format(";GIMBA - {0} - M{1} thread",m,bg.D)   // Thread material
-              + "\n";
+              += String.Format("M{0}{1}, {2}",bg.D,s?" w/shank":"",m) // Type name
+              +  String.Format(";{0}",bg.D  )                         // Nominal diameter
+              +  String.Format(";{0}",bg.dgl)                         // Grip length
+              +  String.Format(";{0}",s?1:0 )                         // Shank
+              +  String.Format(";{0}",1     )                         // Large washer (always)
+              +  String.Format(";{0}",m     )                         // Plain material
+              +  String.Format(";GIMBA - {0} - M{1} thread",m,bg.D)   // Thread material
+              +  "\n";
 
     // Write type catalog file
-    return Utils.WriteTextFile(data,path,overwrite);
+    int result = Utils.WriteTextFile(data,path,overwrite);
+    switch(result)
+    {
+      case -1: Log.WL("- overwritten"); break;
+      case  1: Log.WL("- created"    ); break;
+      default: Log.WL("- skipped"    ); break;
+    }
+    return result;
   }
 
   /// <summary>Writes the grip-to-length lookup table file</summary>
   /// <param name="path">Fully qualified path of lookup table file to write</param>
   /// <param name="overwrite">If <c>true</c>, a previously existing type lookup table file will be overwritten</param>
-  /// <returns><c>true</c> if a previously existing type  lookup table file was overwritten, <c>false</c> otherwise</returns>
-  public static bool WriteG2LTable(string path, bool overwrite)
+  /// <returns>1 if a new file was created, -1 if an existing file was overwritten, and 0 if an existing file was skipped</returns>
+  public static int WriteG2LTable(string path, bool overwrite)
   {
     // TODO: Implement BoltGeometry.WriteG2LTable(...)
-    return false;
+    return 0;
   }
 
   /// <summary>Writes the nominal diameter to bolt assembly parameters lookup table file</summary>
   /// <param name="path">Fully qualified path of lookup table file to write</param>
   /// <param name="overwrite">If <c>true</c>, a previously existing type lookup table file will be overwritten</param>
-  /// <returns><c>true</c> if a previously existing type lookup table file was overwritten, <c>false</c> otherwise</returns>
-  public static bool WriteD2ParamsTable(string folder, bool overwrite)
+  /// <returns>1 if a new file was created, -1 if an existing file was overwritten, and 0 if an existing file was skipped</returns>
+  public static int WriteD2ParamsTable(string folder, bool overwrite)
   {
     // TODO: Implement BoltGeometry.WriteD2ParamsTable(...)
-    return false;
+    return 0;
   }
 
   /// <summary>Writes the diameter to nomimnal diameter lookup table file</summary>
   /// <param name="path">Fully qualified path of lookup table file to write</param>
   /// <param name="overwrite">If <c>true</c>, a previously existing type lookup table file will be overwritten</param>
-  /// <returns><c>true</c> if a previously existing type lookup table file was overwritten, <c>false</c> otherwise</returns>
-  public static bool WriteD2DTable(string folder, bool overwrite)
+  /// <returns>1 if a new file was created, -1 if an existing file was overwritten, and 0 if an existing file was skipped</returns>
+  public static int WriteD2DTable(string folder, bool overwrite)
   {
     // TODO: Implement BoltGeometry.WriteD2DTable(...)
-    return false;
+    return 0;
   }
 
   #endregion
 
-  #region Maco Main Functions
+  #region Main Function of Catalogs And Tables Macro
   
   /// <summary>Manages type catalog and lookup table files for bolts and bolt assemlies.</summary>
   /// <param name="document">The document this macro resides in</param>
   public static void CatalogsAndTables(Document document)
   {
+    TaskDialog td = new TaskDialog("?");
+
+    // Prepare paths
     string docDir = Path.GetDirectoryName(document.PathName);
     string btcPth = Path.Combine(docDir,"Generic ISO Metric Bolt.txt"                ); // Bolt type catalog file
     string atcPth = Path.Combine(docDir,"Generic ISO Metric Bolt Assembly.txt"       ); // Assembly type catalog file
     string g2lPth = Path.Combine(docDir,"GIMBA -- Grip to Length.csv"                ); // Grip to bolt length lookup table file
     string d2pPth = Path.Combine(docDir,"GIMBA -- Nominal Diameter to Parameters.csv"); // Nominal diameter to bolt assembly parameters lookup table file
     string d2dPth = Path.Combine(docDir,"GIMBA -- Diameter to Nominal Diameter.csv"  ); // Diameter to nomimnal diameter lookup table file
+    
+    // Pre-checks: Find existing type catalog and lookup table files
+    int tcn  = 2; // Number of type catalog files
+    int tbn  = 3; // Number of lookup table files
+    int tcex = 0; // Number of existing type catalog files
+    int tbex = 0; // Number of existing lookup table files
+    td.ExpandedContent = "Status of type catalog and lookup table files:";
+    foreach (string path in new string[]{btcPth,atcPth,g2lPth,d2pPth,d2dPth})
+    {
+      td.ExpandedContent+="\n* "+Path.GetFileName(path);
+      if (File.Exists(path))
+      {
+        td.ExpandedContent+=" (exists)";
+        if (".txt".Equals(Path.GetExtension(path),StringComparison.OrdinalIgnoreCase))
+          tcex++;
+        else
+          tbex++;
+      }
+      else
+        td.ExpandedContent+=" (does not exist)";
+    }
+
+    // Do welcome dialog
+    Log.WL();
+    Log.WL("Welcome dialog...");
+    td.Title             = "Good to Go...";
+    td.MainInstruction   = "This macro creates type catalog and lookup table "
+                         + "for the generic ISO metric bolt and bolt assembly "
+                         + "families. Please select an option!";
+    td.MainContent       = "Working directory is: "+docDir+"\n"
+                         + "See details for results of pre-checks.";
+    td.CommonButtons     = TaskDialogCommonButtons.Cancel;
+    td.FooterText        = Utils.MakeHelpLink(document,"Help");
+    td.TitleAutoPrefix   = false;
+    td.AllowCancellation = true;
+    string sCmdSupp1     = "Will create {0} file{1}. ";
+    string sCmdSupp2     = "Please choose below whether {0} existing file{1} "
+                         + "shall be overwritten.";
+    td.AddCommandLink(
+      TaskDialogCommandLinkId.CommandLink1,
+      "Create type catalog files",
+      Utils.MakeCountMsg(tcn,sCmdSupp1) + (tcex>0 ? Utils.MakeCountMsg(tcex,sCmdSupp2) : "")
+    );
+    td.AddCommandLink(
+      TaskDialogCommandLinkId.CommandLink2,
+      "Create lookup table files",
+      Utils.MakeCountMsg(tbn,sCmdSupp1) + (tbex>0 ? Utils.MakeCountMsg(tbex,sCmdSupp2) : "")
+    );
+    if (tcex+tbex>0)
+      td.VerificationText = Utils.MakeCountMsg(tcex+tbex,"Overwrite existing file{1}");
+    TaskDialogResult tdr = td.Show();
+    
+    // Main operation
+    bool doOvr = (tcex+tbex)==0 || td.WasVerificationChecked();
+    int cre = 0; // Number of files newly created
+    int ovr = 0; // Number of files overwritten
+    int skp = 0; // Number of files skipped
+    int err = 0; // Number of errors (max. 1 per file)
+    Tuple<Func<string,bool,int>,string>[] schedule;
+    string details = "";
+    switch (tdr)
+    {
+      case TaskDialogResult.CommandLink1:
+        Log.WL("- Create type catalog files operation selected by user");
+        schedule = new Tuple<Func<string,bool,int>,string>[]{
+          Tuple.Create<Func<string,bool,int>,string>(WriteBoltTypeCatalog    ,btcPth),
+          Tuple.Create<Func<string,bool,int>,string>(WriteAssemblyTypeCatalog,atcPth)
+        };
+        break;
+      case TaskDialogResult.CommandLink2:
+        Log.WL("- Create lookup table files operation selected by user");
+        schedule = new Tuple<Func<string,bool,int>,string>[]{
+          Tuple.Create<Func<string,bool,int>,string>(WriteG2LTable     ,g2lPth),
+          Tuple.Create<Func<string,bool,int>,string>(WriteD2ParamsTable,d2pPth),
+          Tuple.Create<Func<string,bool,int>,string>(WriteD2DTable     ,d2dPth)
+        };
+        break;
+      default:
+        Log.WL("- Cancelled by user");
+        return;
+    }
+    foreach(Tuple<Func<string,bool,int>,string> item in schedule)
+      try
+      {
+        Func<string,bool,int> fnc  = item.Item1;
+        string                path = item.Item2;
+        details += "\n* "+Path.GetFileName(path)+" ";
+        switch (fnc(path,doOvr))
+        {
+          case -1:
+            ovr++;
+            details +="(overwritten)";
+            break;
+          case 1:
+            cre++;
+            details +="(created)";
+            break;
+          default:
+            skp++;
+            details +="(skipped)";
+            break;
+        }
+      }
+      catch (Exception e)
+      {
+        err++;
+        td.ExpandedContent +="(ERROR)";
+        Log.WL(e.ToString());
+      }
+    
+    // TODO: Do Wrap-up dialog
+    Log.WL();
+    Log.WL("Wrap up");
+    td = new TaskDialog("Operation Completed");
+    if (err>0)
+    {
+      td.Title += " with Errors";
+      td.MainIcon = TaskDialogIcon.TaskDialogIconWarning;
+    }
+    td.MainContent       = "See details and log file for further information.";
+    td.ExpandedContent   = "Summary of file operations performed:" + details;
+    // FIXME: This displays GIMBA.html in editor, not in browser
+    td.FooterText        = Path.Combine(Path.GetDirectoryName(document.PathName),"GIMBA.html");
+    td.FooterText        = Utils.MakeHelpLink(document,"Help")
+                         + " - " + Log.MakeLogFileLink("View log file");
+    td.CommonButtons     = TaskDialogCommonButtons.Close;
+    td.AllowCancellation = true;
+    td.TitleAutoPrefix   = false;
+    if (cre+ovr+err==0 && skp>0)
+    {
+      td.MainInstruction = "All output files were present. Nothing to be done.";
+      td.MainContent     = "If you want to recreate the files, re-run the macro and check "
+                         + "\"Overwrite exisiting files\". " + td.MainContent;
+    }
+    else
+    {
+      td.MainInstruction = "";
+      if (cre>0) td.MainInstruction += Utils.MakeCountMsg(cre,"{0} file{1} created. "    );
+      if (ovr>0) td.MainInstruction += Utils.MakeCountMsg(ovr,"{0} file{1} overwritten. ");
+      if (skp>0) td.MainInstruction += Utils.MakeCountMsg(skp,"{0} file{1} skipped. "    );
+      if (err>0) td.MainInstruction += Utils.MakeCountMsg(err,"{0} error{1} occurred. "  );
+    }
+    td.Show();
   }
   
   #endregion
@@ -589,7 +745,7 @@ public static class ThreadMaterials
       sCmdSupp2           = Utils.MakeCountMsg(counts[CNT_TMAT],sCmdSupp2);
       td.AddCommandLink(
         TaskDialogCommandLinkId.CommandLink1,
-        "Create Thread Materials",
+        "Create thread materials",
         sCmdSupp1 + (counts[CNT_TMAT]>0 ? " "+sCmdSupp2 : "")
       );
       if (counts[CNT_TMAT]>0)
@@ -600,7 +756,7 @@ public static class ThreadMaterials
                             + "Template or other materials will not be deleted!";
         td.AddCommandLink(
           TaskDialogCommandLinkId.CommandLink2,
-          "Delete Thread Materials",
+          "Delete thread materials",
           Utils.MakeCountMsg(counts[CNT_TMAT],sCmdSupp1)
         );
       }
@@ -982,10 +1138,10 @@ public static class ThreadMaterials
     switch (cmd)
     {
       case TaskDialogResult.CommandLink1:
-        Log.WL("- Create Thread Materials operation selected by user");
+        Log.WL("- Create thread materials operation selected by user");
         break;
       case TaskDialogResult.CommandLink2:
-        Log.WL("- Delete Thread Materials operation selected by user");
+        Log.WL("- Delete thread materials operation selected by user");
         break;
       default:
         Log.WL("- Cancelled by user");
@@ -1180,6 +1336,7 @@ namespace GIMBA
       td.ExpandedContent = e.ToString();
       td.CommonButtons   = TaskDialogCommonButtons.Close;
       td.MainIcon        = TaskDialogIcon.TaskDialogIconError;
+      td.FooterText      = Log.MakeLogFileLink("View log");
       td.Show();
     }
     
