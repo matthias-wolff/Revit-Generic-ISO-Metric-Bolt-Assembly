@@ -1,7 +1,7 @@
 # Revit-Generic-ISO-Metric-Bolt-Assembly
 Autodesk Revit families and macros for generic ISO metric bolts and bolt assemblies
 
-See [documentation](GIMBA.html) for details.
+&#x25B6; See [package documentation](GIMBA.html) for details.
 
 ## ISO Metric Hex Bolt Assembly
 * extensive type catalog M 5 ... M 64
