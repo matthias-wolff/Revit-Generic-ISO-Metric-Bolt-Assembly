@@ -276,10 +276,42 @@ public class BoltGeometry
   /// <returns>1 if a new file was created, -1 if an existing file was overwritten, and 0 if an existing file was skipped</returns>
   public static int WriteBoltTypeCatalog(string path, bool overwrite)
   {
-    // TODO: Make CSV Header (";" = German locale)
-    // TODO: Create type definitions
-    // TODO: Write type catalog file
-    return 0;
+    Log.WL();
+    Log.WL(path);
+    
+    // Make CSV Header (";" = German locale)
+    string data 
+      = ";Nominal Diameter"+CsvTlmm
+      + ";Length"     +CsvTlmm
+      + ";Shank"           +CsvToth
+      + ";Material"        +CsvToth
+      + ";Thread Material" +CsvToth
+      + "\n";
+
+    // Create type definitions
+    foreach (BoltGeometry bg in BoltGeometry.GetList())
+      foreach (double l in bg.cls)
+        foreach (bool s in new bool[]{false,true})
+          if (!s || l>50)
+            foreach (string m in materialNames)
+              data 
+                += String.Format("M{0} x {1}{2}, {3}",bg.D,l,s?" w/shank":"",m) // Type name
+                +  String.Format(";{0}",bg.D  )                                 // Nominal diameter
+                +  String.Format(";{0}",l     )                                 // Length
+                +  String.Format(";{0}",s?1:0 )                                 // Shank
+                +  String.Format(";{0}",m     )                                 // Plain material
+                +  String.Format(";GIMBA - {0} - M{1} thread",m,bg.D)           // Thread material
+                +  "\n";
+
+    // Write type catalog file
+    int result = Utils.WriteTextFile(data,path,overwrite);
+    switch(result)
+    {
+      case -1: Log.WL("- overwritten"); break;
+      case  1: Log.WL("- created"    ); break;
+      default: Log.WL("- skipped"    ); break;
+    }
+    return result;
   }
 
   /// <summary>Writes the assembly type catalog file</summary>
@@ -296,7 +328,6 @@ public class BoltGeometry
       = ";Nominal Diameter"+CsvTlmm
       + ";Grip Length"     +CsvTlmm
       + ";Shank"           +CsvToth
-      + ";Large Washers"   +CsvToth
       + ";Material"        +CsvToth
       + ";Thread Material" +CsvToth
       + "\n";
@@ -311,7 +342,6 @@ public class BoltGeometry
               +  String.Format(";{0}",bg.D  )                         // Nominal diameter
               +  String.Format(";{0}",bg.dgl)                         // Grip length
               +  String.Format(";{0}",s?1:0 )                         // Shank
-              +  String.Format(";{0}",1     )                         // Large washer (always)
               +  String.Format(";{0}",m     )                         // Plain material
               +  String.Format(";GIMBA - {0} - M{1} thread",m,bg.D)   // Thread material
               +  "\n";
@@ -333,30 +363,198 @@ public class BoltGeometry
   /// <returns>1 if a new file was created, -1 if an existing file was overwritten, and 0 if an existing file was skipped</returns>
   public static int WriteG2LTable(string path, bool overwrite)
   {
-    // TODO: Implement BoltGeometry.WriteG2LTable(...)
-    return 0;
+    Log.WL();
+    Log.WL(path);
+    
+    // Make CSV Header (";" = German locale)
+    string data 
+      = ";D" +CsvTlmm
+      + ";LG"+CsvTlmm
+      + ";l" +CsvTlmm
+      + "\n";
+
+    // Create lookup table lines
+    foreach (BoltGeometry bg in BoltGeometry.GetList())
+      for (int LG=0; LG<=600; LG++)
+      {
+        int m;
+        if      (LG< 23) m=2;
+        else if (LG<100) m=5;
+        else             m=10;
+        if (LG%m==0)
+        {
+          double l    = 0;
+          double lmin = LG + 1.2*bg.k+2*bg.u;
+          foreach (double L in bg.cls)
+            if (L>lmin)
+            {
+              l = L;
+              break;
+            }
+          if (l>0)
+            data 
+              += String.Format("M{0} x ]{1}[",bg.D,LG) // Line name (irrelevant)
+              +  String.Format(";{0}"        ,bg.D   ) // Nominal diameter
+              +  String.Format(";{0}"        ,LG     ) // Grip length
+              +  String.Format(";{0}"        ,l      ) // Bolt length
+              +  "\n";
+        }
+      }
+
+    // Write lookup table file
+    int result = Utils.WriteTextFile(data,path,overwrite);
+    switch(result)
+    {
+      case -1: Log.WL("- overwritten"); break;
+      case  1: Log.WL("- created"    ); break;
+      default: Log.WL("- skipped"    ); break;
+    }
+    return result;
   }
 
-  /// <summary>Writes the nominal diameter to bolt assembly parameters lookup table file</summary>
+  /// <summary>Writes the geometry parameters lookup table file</summary>
   /// <param name="path">Fully qualified path of lookup table file to write</param>
   /// <param name="overwrite">If <c>true</c>, a previously existing type lookup table file will be overwritten</param>
   /// <returns>1 if a new file was created, -1 if an existing file was overwritten, and 0 if an existing file was skipped</returns>
-  public static int WriteD2ParamsTable(string folder, bool overwrite)
+  public static int WriteMGeoTable(string path, bool overwrite)
   {
-    // TODO: Implement BoltGeometry.WriteD2ParamsTable(...)
-    return 0;
+    Log.WL();
+    Log.WL(path);
+    
+    // Make CSV Header (";" = German locale)
+    string data 
+      = ";D"   +CsvTlmm
+      + ";P"   +CsvTlmm
+      + ";H"   +CsvTlmm
+      + ";d2"  +CsvTlmm
+      + ";s"   +CsvTlmm
+      + ";k"   +CsvTlmm
+      + ";a"   +CsvTlmm
+      + ";b2"  +CsvTlmm
+      + ";b3"  +CsvTlmm
+      + ";b4"  +CsvTlmm
+      + ";du1" +CsvTlmm
+      + ";du2" +CsvTlmm
+      + ";u"   +CsvTlmm
+      + "\n";
+
+    // Create lookup table lines
+    foreach (BoltGeometry bg in BoltGeometry.GetList())
+      data 
+        += String.Format("M{0}"   ,bg.D  ) // Line name (irrelevant)
+        +  String.Format(";{0}"   ,bg.D  ) // Nominal diameter
+        +  String.Format(";{0}"   ,bg.P  ) // Thread pitch
+        +  String.Format(";{0:F2}",bg.H  ) // Thread height
+        +  String.Format(";{0:F2}",bg.d2 ) // Effective pitch diameter
+        +  String.Format(";{0}"   ,bg.s  ) // Wrench size
+        +  String.Format(";{0}"   ,bg.k  ) // Height of bolt cap and nut
+        +  String.Format(";{0}"   ,bg.a  ) // Minimum distance between cap and thread
+        +  String.Format(";{0}"   ,bg.b2 ) // Minimum thread length for bolt lengths < 125 mm
+        +  String.Format(";{0}"   ,bg.b3 ) // Minimum thread length for bolt lengths < 200 mm
+        +  String.Format(";{0}"   ,bg.b4 ) // Minimum thread length for bolt lengths >= 200 mm
+        +  String.Format(";{0}"   ,bg.du1) // Diameter of washer clearance hole
+        +  String.Format(";{0}"   ,bg.du2) // Washer diameter
+        +  String.Format(";{0}"   ,bg.u  ) // Washer thickness
+        +  "\n";
+
+    // Write lookup table file
+    int result = Utils.WriteTextFile(data,path,overwrite);
+    switch(result)
+    {
+      case -1: Log.WL("- overwritten"); break;
+      case  1: Log.WL("- created"    ); break;
+      default: Log.WL("- skipped"    ); break;
+    }
+    return result;
   }
 
-  /// <summary>Writes the diameter to nomimnal diameter lookup table file</summary>
+  /// <summary>Writes the supported nominal diameters lookup table file</summary>
   /// <param name="path">Fully qualified path of lookup table file to write</param>
   /// <param name="overwrite">If <c>true</c>, a previously existing type lookup table file will be overwritten</param>
   /// <returns>1 if a new file was created, -1 if an existing file was overwritten, and 0 if an existing file was skipped</returns>
-  public static int WriteD2DTable(string folder, bool overwrite)
+  public static int WriteD2DTable(string path, bool overwrite)
   {
-    // TODO: Implement BoltGeometry.WriteD2DTable(...)
-    return 0;
+    Log.WL();
+    Log.WL(path);
+    
+    // Make CSV Header (";" = German locale)
+    string data 
+      = ";ND" +CsvTlmm
+      + ";D"  +CsvTlmm
+      + "\n";
+
+    // Create lookup table lines
+    IList<BoltGeometry> bgl = BoltGeometry.GetList();
+    int i  = 0;        // Index in bolt geometries list
+    int D1 = 3;        // Lower permissible nominal diameter
+    int D2 = bgl[i].D; // Upper permissible nominal diameter
+    for (int D=3; D<=64; D++)
+    {
+      data += String.Format("D={0};{1};{2}\n",D,D,D-D1<D2-D?D1:D2);
+      if (D==D2)
+      {
+        D1=D2;
+        if (i<bgl.Count-1)
+          D2 = bgl[++i].D;
+      }
+    }
+
+    // Write lookup table file
+    int result = Utils.WriteTextFile(data,path,overwrite);
+    switch(result)
+    {
+      case -1: Log.WL("- overwritten"); break;
+      case  1: Log.WL("- created"    ); break;
+      default: Log.WL("- skipped"    ); break;
+    }
+    return result;
   }
 
+  /// <summary>Dumps the geometry parameters to an HTML table</summary>
+  /// <param name="path">Fully qualified path of HTML file to write</param>
+  /// <param name="overwrite">If <c>true</c>, a previously existing type lookup table file will be overwritten</param>
+  /// <returns>1 if a new file was created, -1 if an existing file was overwritten, and 0 if an existing file was skipped</returns>
+  public static int WriteMGeoHtml(string path, bool overwrite)
+  {
+    Log.WL();
+    Log.WL(path);
+
+    // TODO: Make HTML table header
+    string data 
+      = "\n";
+
+    // TODO: Create HTML table lines
+    foreach (BoltGeometry bg in BoltGeometry.GetList())
+      data 
+        += String.Format("M{0}"   ,bg.D  ) // Name
+        +  String.Format(";{0}"   ,bg.D  ) // Nominal diameter
+        +  String.Format(";{0}"   ,bg.P  ) // Thread pitch
+        +  String.Format(";{0:F2}",bg.H  ) // Thread height
+        +  String.Format(";{0:F2}",bg.d2 ) // Effective pitch diameter
+        +  String.Format(";{0}"   ,bg.s  ) // Wrench size
+        +  String.Format(";{0}"   ,bg.k  ) // Height of bolt cap and nut
+        +  String.Format(";{0}"   ,bg.a  ) // Minimum distance between cap and thread
+        +  String.Format(";{0}"   ,bg.b2 ) // Minimum thread length for bolt lengths < 125 mm
+        +  String.Format(";{0}"   ,bg.b3 ) // Minimum thread length for bolt lengths < 200 mm
+        +  String.Format(";{0}"   ,bg.b4 ) // Minimum thread length for bolt lengths >= 200 mm
+        +  String.Format(";{0}"   ,bg.du1) // Diameter of washer clearance hole
+        +  String.Format(";{0}"   ,bg.du2) // Washer diameter
+        +  String.Format(";{0}"   ,bg.u  ) // Washer thickness
+        +  "\n";
+
+    // TODO: Make HTML table footer
+
+    // Write type catalog file
+    int result = Utils.WriteTextFile(data,path,overwrite);
+    switch(result)
+    {
+      case -1: Log.WL("- overwritten"); break;
+      case  1: Log.WL("- created"    ); break;
+      default: Log.WL("- skipped"    ); break;
+    }
+    return result;
+  }
+  
   #endregion
 
   #region Main Function of Catalogs And Tables Macro
@@ -369,19 +567,22 @@ public class BoltGeometry
 
     // Prepare paths
     string docDir = Path.GetDirectoryName(document.PathName);
-    string btcPth = Path.Combine(docDir,"Generic ISO Metric Bolt.txt"                ); // Bolt type catalog file
-    string atcPth = Path.Combine(docDir,"Generic ISO Metric Bolt Assembly.txt"       ); // Assembly type catalog file
-    string g2lPth = Path.Combine(docDir,"GIMBA -- Grip to Length.csv"                ); // Grip to bolt length lookup table file
-    string d2pPth = Path.Combine(docDir,"GIMBA -- Nominal Diameter to Parameters.csv"); // Nominal diameter to bolt assembly parameters lookup table file
-    string d2dPth = Path.Combine(docDir,"GIMBA -- Diameter to Nominal Diameter.csv"  ); // Diameter to nomimnal diameter lookup table file
+    string btcPth = Path.Combine(docDir,"Generic ISO Metric Bolt.txt"         ); // Bolt type catalog file
+    string atcPth = Path.Combine(docDir,"Generic ISO Metric Bolt Assembly.txt"); // Assembly type catalog file
+    string g2lPth = Path.Combine(docDir,"GIMBA -- G2L.csv"                    ); // Grip to bolt length lookup table file
+    string mgePth = Path.Combine(docDir,"GIMBA -- MGeo.csv"                   ); // Geometry parameters lookup table file
+    string d2dPth = Path.Combine(docDir,"GIMBA -- D2D.csv"                    ); // Supported nominal diameters lookup table file
+    string mghPth = Path.Combine(docDir,"GIMBA -- MGeo.html"                  ); // Geometry parameters HTML table file
     
     // Pre-checks: Find existing type catalog and lookup table files
     int tcn  = 2; // Number of type catalog files
     int tbn  = 3; // Number of lookup table files
+    int thn  = 1; // Number of HTML files
     int tcex = 0; // Number of existing type catalog files
     int tbex = 0; // Number of existing lookup table files
+    int thex = 0; // Number of existing HTML files
     td.ExpandedContent = "Status of type catalog and lookup table files:";
-    foreach (string path in new string[]{btcPth,atcPth,g2lPth,d2pPth,d2dPth})
+    foreach (string path in new string[]{btcPth,atcPth,g2lPth,mgePth,d2dPth})
     {
       td.ExpandedContent+="\n* "+Path.GetFileName(path);
       if (File.Exists(path))
@@ -389,6 +590,8 @@ public class BoltGeometry
         td.ExpandedContent+=" (exists)";
         if (".txt".Equals(Path.GetExtension(path),StringComparison.OrdinalIgnoreCase))
           tcex++;
+        else if (".html".Equals(Path.GetExtension(path),StringComparison.OrdinalIgnoreCase))
+          thex++;
         else
           tbex++;
       }
@@ -422,8 +625,13 @@ public class BoltGeometry
       "Create lookup table files",
       Utils.MakeCountMsg(tbn,sCmdSupp1) + (tbex>0 ? Utils.MakeCountMsg(tbex,sCmdSupp2) : "")
     );
+    td.AddCommandLink(
+      TaskDialogCommandLinkId.CommandLink3,
+      "Dump geometry parameters to an HTML table",
+      Utils.MakeCountMsg(thn,sCmdSupp1) + (thex>0 ? Utils.MakeCountMsg(tbex,sCmdSupp2) : "")
+    );
     if (tcex+tbex>0)
-      td.VerificationText = Utils.MakeCountMsg(tcex+tbex,"Overwrite existing file{1}");
+      td.VerificationText = Utils.MakeCountMsg(tcex+tbex+thex,"Overwrite existing file{1}");
     TaskDialogResult tdr = td.Show();
     
     // Main operation
@@ -446,9 +654,15 @@ public class BoltGeometry
       case TaskDialogResult.CommandLink2:
         Log.WL("- Create lookup table files operation selected by user");
         schedule = new Tuple<Func<string,bool,int>,string>[]{
-          Tuple.Create<Func<string,bool,int>,string>(WriteG2LTable     ,g2lPth),
-          Tuple.Create<Func<string,bool,int>,string>(WriteD2ParamsTable,d2pPth),
-          Tuple.Create<Func<string,bool,int>,string>(WriteD2DTable     ,d2dPth)
+          Tuple.Create<Func<string,bool,int>,string>(WriteG2LTable ,g2lPth),
+          Tuple.Create<Func<string,bool,int>,string>(WriteMGeoTable,mgePth),
+          Tuple.Create<Func<string,bool,int>,string>(WriteD2DTable ,d2dPth)
+        };
+        break;
+      case TaskDialogResult.CommandLink3:
+        Log.WL("- Create lookup table files operation selected by user");
+        schedule = new Tuple<Func<string,bool,int>,string>[]{
+          Tuple.Create<Func<string,bool,int>,string>(WriteMGeoHtml,mghPth)
         };
         break;
       default:

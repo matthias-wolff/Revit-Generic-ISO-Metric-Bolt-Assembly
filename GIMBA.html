@@ -4,15 +4,17 @@
   <title>Revit Families and Macros for Generic ISO Metric Bolt Assemblies</title>
   <style>
 		body {
-		  width: 100%;
+		  width: 16cm;
 		  margin-top: 0;
-		  text-align: center;
+		  margin-left: auto;
+      margin-right: auto;
       font-family: Whitney, Calibri, sans-serif;
       font-size: 11pt;
       font-weight: 1;
       -ms-hyphens: auto;
       -webkit-hyphens: auto;
       hyphens: auto;
+      text-align: justify;
 		}
 		h1 {
       width: 100%;
@@ -29,8 +31,8 @@
       color: white;
 		}
 		h2 {
-      margin-top: 9pt;
-      margin-bottom: 0;
+      margin-top: 18pt;
+      margin-bottom: 3pt;
       text-transform: uppercase;
 		  font-size: 16pt;
       font-weight: 1;
@@ -51,12 +53,34 @@
     b {
       font-weight: normal;
     }
-    #container {
-      margin-top: 0;
+    table { 
+      border-collapse: collapse;
       margin-left: auto;
       margin-right: auto;
-      width: 16cm;
-      text-align: justify;
+    }
+    th {
+      font-size: 11pt;
+      font-weight: 1;
+      text-align: left;
+      vertical-align: bottom;
+      padding: 2pt;
+    }
+    th.rotate {
+      /* See: https://css-tricks.com/rotated-table-column-headers */
+      height: 6.5em;
+      white-space: nowrap;
+    }
+    th.rotate > div {
+      transform: 
+        translate(0em, -0.3ex)
+        rotate(-90deg);
+      width: 1.2em;
+    }
+    td {
+      font-size: 11pt;
+      font-weight: 1;
+      vertical-align: top;
+      padding: 2pt;
     }
     #author {
       margin-top: 3pt;
@@ -66,14 +90,38 @@
     }
     .TT {
       font-family: Consolas, monospace;
+      letter-spacing: -0.07em;
       font-size: 10pt;
-      transform: scaleX(0.7);
       font-weight: 1;
+    }
+    .table {
+      margin-top: 12pt;
+      margin-bottom: 12pt;
+    }
+    .tablecaption {
+      text-align: center;
+      font-size: 9pt;
+      font-style: italic;
+      margin-left: 1cm;
+      margin-right: 1cm;
+      margin-bottom: 3pt;
+    }
+    .toprule {
+      border-top: 1.5pt solid black;
+    }
+    .topmidrule {
+      border-top: 1.5pt solid black;
+      border-bottom: 0.75pt solid black;
+    }
+    .midrule {
+      border-bottom: 0.75pt solid black;
+    }
+    .bottomrule {
+      border-bottom: 1.5pt solid black;
     }
   </style>
 </head>
 <body>
-<div id="container">
   <h1>GIMBA &ndash; <b>G</b>eneric <b>I</b>SO <b>M</b>etric <b>B</b>olt <b>A</b>ssemblies<br>
   <span style="font-size: 14;">Revit Families and Macros</span></h1>
   <p id="author">
@@ -82,14 +130,83 @@
     Most recent version <a href="https://github.com/matthias-wolff/Revit-Generic-ISO-Metric-Bolt-Assembly">here</a>
   </p>
   
-  <h2>1 Contents of Package and Installation</h2>
+  <h2>1&emsp;Contents of Package and Installation</h2>
   <p>
    This package contains two Revit component families, <span class="TT">Generic
    ISO Metric Bolt.rfa</span> and <span class="TT">Generic ISO Metric Bolt 
    Assembly.rfa</span>, and one macro family, <span class="TT">GIMBA.rfa</span>,
    along with type catalogs and lookup tables. Table 1 shows an overview.
   </p>
-</div>
+  <div class="table">
+    <div class="tablecaption">Table 1: Package contents</div>
+    <table>
+      <tr class="topmidrule">
+        <th>File(s)</th>
+        <th>Preview/Description</th>
+        <th class="rotate"><div>Component</div></th>
+        <th class="rotate"><div>Type Catalog</div></th>
+        <th class="rotate"><div>Materials</div></th>
+        <th class="rotate"><div>Lookup Tables</div></th>
+        <th class="rotate"><div>Macros</div></th>
+      </tr>
+      <tr>
+        <td><span class="TT" style="white-space: nowrap"
+          >Generic ISO Metric Bolt.rfa<br
+          >Generic ISO Metric Bolt.txt</span></td>
+        <td></td>
+        <td style="text-align: center">&#x25cf;</td>
+        <td style="text-align: center">&#x25cf;</td>
+        <td style="text-align: center">&#x25cf;</td>
+        <td style="text-align: center">&#x25cf;</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="TT" style="white-space: nowrap"
+          >Generic ISO Metric Bolt Assembly.rfa<br
+          >Generic ISO Metric Bolt Assembly.txt<br
+          ></span></td>
+        <td></td>
+        <td style="text-align: center">&#x25cf;</td>
+        <td style="text-align: center">&#x25cf;</td>
+        <td style="text-align: center">&#x25cf;</td>
+        <td style="text-align: center">&#x25cf;</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="TT" style="white-space: nowrap"
+          >Generic ISO Metric Bolt Assembly Geometry.rfa</span
+          ></td>
+        <td>Common 3D geometry of the component families above</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td style="text-align: center">&#x25cf;</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="TT" style="white-space: nowrap"
+          >GIMBA.rfa</span></td>
+        <td>Management macros for thread materials, type catalogs, and lookup 
+          tables</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td style="text-align: center">&#x25cf;</td>
+      </tr>
+      <tr class="bottomrule">
+        <td><span class="TT" style="white-space: nowrap"
+          >GIMBA.html</span></td>
+        <td>This documentation</td>
+        <td style="background-color:#E0E0E0">&nbsp;</td>
+        <td style="background-color:#E0E0E0">&nbsp;</td>
+        <td style="background-color:#E0E0E0">&nbsp;</td>
+        <td style="background-color:#E0E0E0">&nbsp;</td>
+        <td style="background-color:#E0E0E0">&nbsp;</td>
+      </tr>
+    </table>
+  </div>
+
 </body>
 <!-- 
 https://thebuildingcoder.typepad.com/blog/2019/11/material-physical-and-thermal-assets.html

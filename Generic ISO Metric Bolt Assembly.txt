@@ -1,44 +1,44 @@
-;Nominal Diameter##LENGTH##MILLIMETERS;Grip Length##LENGTH##MILLIMETERS;Shank##OTHER##;Large Washers##OTHER##;Material##OTHER##;Thread Material##OTHER##
-M3, Steel galvanized;3;10;0;1;Steel galvanized;GIMBA - Steel galvanized - M3 thread
-M4, Steel galvanized;4;20;0;1;Steel galvanized;GIMBA - Steel galvanized - M4 thread
-M5, Steel galvanized;5;50;0;1;Steel galvanized;GIMBA - Steel galvanized - M5 thread
-M6, Steel galvanized;6;50;0;1;Steel galvanized;GIMBA - Steel galvanized - M6 thread
-M8, Steel galvanized;8;50;0;1;Steel galvanized;GIMBA - Steel galvanized - M8 thread
-M10, Steel galvanized;10;100;0;1;Steel galvanized;GIMBA - Steel galvanized - M10 thread
-M10 w/shank, Steel galvanized;10;100;1;1;Steel galvanized;GIMBA - Steel galvanized - M10 thread
-M12, Steel galvanized;12;100;0;1;Steel galvanized;GIMBA - Steel galvanized - M12 thread
-M12 w/shank, Steel galvanized;12;100;1;1;Steel galvanized;GIMBA - Steel galvanized - M12 thread
-M14, Steel galvanized;14;100;0;1;Steel galvanized;GIMBA - Steel galvanized - M14 thread
-M14 w/shank, Steel galvanized;14;100;1;1;Steel galvanized;GIMBA - Steel galvanized - M14 thread
-M16, Steel galvanized;16;150;0;1;Steel galvanized;GIMBA - Steel galvanized - M16 thread
-M16 w/shank, Steel galvanized;16;150;1;1;Steel galvanized;GIMBA - Steel galvanized - M16 thread
-M18, Steel galvanized;18;150;0;1;Steel galvanized;GIMBA - Steel galvanized - M18 thread
-M18 w/shank, Steel galvanized;18;150;1;1;Steel galvanized;GIMBA - Steel galvanized - M18 thread
-M20, Steel galvanized;20;150;0;1;Steel galvanized;GIMBA - Steel galvanized - M20 thread
-M20 w/shank, Steel galvanized;20;150;1;1;Steel galvanized;GIMBA - Steel galvanized - M20 thread
-M22, Steel galvanized;22;150;0;1;Steel galvanized;GIMBA - Steel galvanized - M22 thread
-M22 w/shank, Steel galvanized;22;150;1;1;Steel galvanized;GIMBA - Steel galvanized - M22 thread
-M24, Steel galvanized;24;150;0;1;Steel galvanized;GIMBA - Steel galvanized - M24 thread
-M24 w/shank, Steel galvanized;24;150;1;1;Steel galvanized;GIMBA - Steel galvanized - M24 thread
-M27, Steel galvanized;27;150;0;1;Steel galvanized;GIMBA - Steel galvanized - M27 thread
-M27 w/shank, Steel galvanized;27;150;1;1;Steel galvanized;GIMBA - Steel galvanized - M27 thread
-M30, Steel galvanized;30;150;0;1;Steel galvanized;GIMBA - Steel galvanized - M30 thread
-M30 w/shank, Steel galvanized;30;150;1;1;Steel galvanized;GIMBA - Steel galvanized - M30 thread
-M33, Steel galvanized;33;150;0;1;Steel galvanized;GIMBA - Steel galvanized - M33 thread
-M33 w/shank, Steel galvanized;33;150;1;1;Steel galvanized;GIMBA - Steel galvanized - M33 thread
-M36, Steel galvanized;36;150;0;1;Steel galvanized;GIMBA - Steel galvanized - M36 thread
-M36 w/shank, Steel galvanized;36;150;1;1;Steel galvanized;GIMBA - Steel galvanized - M36 thread
-M39, Steel galvanized;39;150;0;1;Steel galvanized;GIMBA - Steel galvanized - M39 thread
-M39 w/shank, Steel galvanized;39;150;1;1;Steel galvanized;GIMBA - Steel galvanized - M39 thread
-M42, Steel galvanized;42;150;0;1;Steel galvanized;GIMBA - Steel galvanized - M42 thread
-M42 w/shank, Steel galvanized;42;150;1;1;Steel galvanized;GIMBA - Steel galvanized - M42 thread
-M45, Steel galvanized;45;150;0;1;Steel galvanized;GIMBA - Steel galvanized - M45 thread
-M45 w/shank, Steel galvanized;45;150;1;1;Steel galvanized;GIMBA - Steel galvanized - M45 thread
-M48, Steel galvanized;48;150;0;1;Steel galvanized;GIMBA - Steel galvanized - M48 thread
-M48 w/shank, Steel galvanized;48;150;1;1;Steel galvanized;GIMBA - Steel galvanized - M48 thread
-M52, Steel galvanized;52;180;0;1;Steel galvanized;GIMBA - Steel galvanized - M52 thread
-M52 w/shank, Steel galvanized;52;180;1;1;Steel galvanized;GIMBA - Steel galvanized - M52 thread
-M56, Steel galvanized;56;180;0;1;Steel galvanized;GIMBA - Steel galvanized - M56 thread
-M56 w/shank, Steel galvanized;56;180;1;1;Steel galvanized;GIMBA - Steel galvanized - M56 thread
-M64, Steel galvanized;64;250;0;1;Steel galvanized;GIMBA - Steel galvanized - M64 thread
-M64 w/shank, Steel galvanized;64;250;1;1;Steel galvanized;GIMBA - Steel galvanized - M64 thread
+;Nominal Diameter##LENGTH##MILLIMETERS;Grip Length##LENGTH##MILLIMETERS;Shank##OTHER##;Material##OTHER##;Thread Material##OTHER##
+M3, Steel galvanized;3;10;0;Steel galvanized;GIMBA - Steel galvanized - M3 thread
+M4, Steel galvanized;4;20;0;Steel galvanized;GIMBA - Steel galvanized - M4 thread
+M5, Steel galvanized;5;50;0;Steel galvanized;GIMBA - Steel galvanized - M5 thread
+M6, Steel galvanized;6;50;0;Steel galvanized;GIMBA - Steel galvanized - M6 thread
+M8, Steel galvanized;8;50;0;Steel galvanized;GIMBA - Steel galvanized - M8 thread
+M10, Steel galvanized;10;100;0;Steel galvanized;GIMBA - Steel galvanized - M10 thread
+M10 w/shank, Steel galvanized;10;100;1;Steel galvanized;GIMBA - Steel galvanized - M10 thread
+M12, Steel galvanized;12;100;0;Steel galvanized;GIMBA - Steel galvanized - M12 thread
+M12 w/shank, Steel galvanized;12;100;1;Steel galvanized;GIMBA - Steel galvanized - M12 thread
+M14, Steel galvanized;14;100;0;Steel galvanized;GIMBA - Steel galvanized - M14 thread
+M14 w/shank, Steel galvanized;14;100;1;Steel galvanized;GIMBA - Steel galvanized - M14 thread
+M16, Steel galvanized;16;150;0;Steel galvanized;GIMBA - Steel galvanized - M16 thread
+M16 w/shank, Steel galvanized;16;150;1;Steel galvanized;GIMBA - Steel galvanized - M16 thread
+M18, Steel galvanized;18;150;0;Steel galvanized;GIMBA - Steel galvanized - M18 thread
+M18 w/shank, Steel galvanized;18;150;1;Steel galvanized;GIMBA - Steel galvanized - M18 thread
+M20, Steel galvanized;20;150;0;Steel galvanized;GIMBA - Steel galvanized - M20 thread
+M20 w/shank, Steel galvanized;20;150;1;Steel galvanized;GIMBA - Steel galvanized - M20 thread
+M22, Steel galvanized;22;150;0;Steel galvanized;GIMBA - Steel galvanized - M22 thread
+M22 w/shank, Steel galvanized;22;150;1;Steel galvanized;GIMBA - Steel galvanized - M22 thread
+M24, Steel galvanized;24;150;0;Steel galvanized;GIMBA - Steel galvanized - M24 thread
+M24 w/shank, Steel galvanized;24;150;1;Steel galvanized;GIMBA - Steel galvanized - M24 thread
+M27, Steel galvanized;27;150;0;Steel galvanized;GIMBA - Steel galvanized - M27 thread
+M27 w/shank, Steel galvanized;27;150;1;Steel galvanized;GIMBA - Steel galvanized - M27 thread
+M30, Steel galvanized;30;150;0;Steel galvanized;GIMBA - Steel galvanized - M30 thread
+M30 w/shank, Steel galvanized;30;150;1;Steel galvanized;GIMBA - Steel galvanized - M30 thread
+M33, Steel galvanized;33;150;0;Steel galvanized;GIMBA - Steel galvanized - M33 thread
+M33 w/shank, Steel galvanized;33;150;1;Steel galvanized;GIMBA - Steel galvanized - M33 thread
+M36, Steel galvanized;36;150;0;Steel galvanized;GIMBA - Steel galvanized - M36 thread
+M36 w/shank, Steel galvanized;36;150;1;Steel galvanized;GIMBA - Steel galvanized - M36 thread
+M39, Steel galvanized;39;150;0;Steel galvanized;GIMBA - Steel galvanized - M39 thread
+M39 w/shank, Steel galvanized;39;150;1;Steel galvanized;GIMBA - Steel galvanized - M39 thread
+M42, Steel galvanized;42;150;0;Steel galvanized;GIMBA - Steel galvanized - M42 thread
+M42 w/shank, Steel galvanized;42;150;1;Steel galvanized;GIMBA - Steel galvanized - M42 thread
+M45, Steel galvanized;45;150;0;Steel galvanized;GIMBA - Steel galvanized - M45 thread
+M45 w/shank, Steel galvanized;45;150;1;Steel galvanized;GIMBA - Steel galvanized - M45 thread
+M48, Steel galvanized;48;150;0;Steel galvanized;GIMBA - Steel galvanized - M48 thread
+M48 w/shank, Steel galvanized;48;150;1;Steel galvanized;GIMBA - Steel galvanized - M48 thread
+M52, Steel galvanized;52;180;0;Steel galvanized;GIMBA - Steel galvanized - M52 thread
+M52 w/shank, Steel galvanized;52;180;1;Steel galvanized;GIMBA - Steel galvanized - M52 thread
+M56, Steel galvanized;56;180;0;Steel galvanized;GIMBA - Steel galvanized - M56 thread
+M56 w/shank, Steel galvanized;56;180;1;Steel galvanized;GIMBA - Steel galvanized - M56 thread
+M64, Steel galvanized;64;250;0;Steel galvanized;GIMBA - Steel galvanized - M64 thread
+M64 w/shank, Steel galvanized;64;250;1;Steel galvanized;GIMBA - Steel galvanized - M64 thread
