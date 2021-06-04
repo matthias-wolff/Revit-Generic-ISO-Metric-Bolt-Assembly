@@ -1,7 +1,9 @@
-﻿// Text dump of Revit materials properties
+﻿// REVIT DOCUMENT MACRO MODULE "Utils"
+// Text dump of Revit materials properties
 //
 // Author    : Matthias Wolff
-// Modified  : 2021-05-30
+// Modified  : 2021-06-01
+// Latest    : https://github.com/matthias-wolff/Revit-Generic-ISO-Metric-Bolt-Assembly/blob/main/GIMBA.rfa%23Utils%23ThisDocument.bak.cs
 // References:
 // [1] About Macro Manager and the Revit Macro IDE
 //     https://help.autodesk.com/view/RVT/2022/ENU/?guid=GUID-071913D8-214A-45AB-A798-A81653E77F88
@@ -275,61 +277,71 @@ public static class Dump
     if (material==null)
       return Dump.WriteLine("<null> (Material)");
 
-    string d = "";
-    try
-    {
-      d += Dump.WriteLine(prefix+String.Format("Material \"{0}\"",material.Name));
-      prefix = "  "+prefix;
+    string d = Dump.WriteLine(prefix+String.Format("Material \"{0}\"",material.Name));
+    prefix = "  "+prefix;
 
-      Document doc = material.Document;
-      d += Dump.WriteLine(prefix+String.Format("<Document PathName>: {0}",doc.PathName));
-      
-      // Dump ordinary properties
-      d += Dump.WriteLine(prefix+"<Ordinary Properties>");
-      PropertyInfo[] pis = material.GetType().GetProperties();
-      foreach (PropertyInfo pi in pis)       
-        d += Dump.ToString(pi,material,"  "+prefix);
-   
-      // Appearance (Rendering) Asset
-      string s = "<Appearance Asset>";
-      AppearanceAssetElement appearanceElement = doc.GetElement(material.AppearanceAssetId) as AppearanceAssetElement;
-      if (appearanceElement!=null)
-      {
-        d += Dump.WriteLine(prefix+s);
-        Asset appearanceAsset = appearanceElement.GetRenderingAsset();
-        d += Dump.ToString(appearanceAsset,"  "+prefix);
-      }
-      else
-        d += Dump.WriteLine(prefix+s+": -none-");
-  
-      // Physical (Structural) Asset
-      s = "<Physical Asset>";
-      PropertySetElement physicalPropSet = doc.GetElement(material.StructuralAssetId) as PropertySetElement;
-      if (physicalPropSet!=null)
-      {
-        d += Dump.WriteLine(prefix+s);
-        StructuralAsset physicalAsset = physicalPropSet.GetStructuralAsset();
-        d += Dump.ToString(physicalAsset,physicalPropSet,"  "+prefix);
-      }
-      else
-        d += Dump.WriteLine(prefix+s+": -none-");
-  
-      // Thermal Asset
-      s = "<Thermal Asset>";
-      PropertySetElement thermalPropSet = doc.GetElement(material.ThermalAssetId) as PropertySetElement;
-      if (thermalPropSet!=null)
-      {
-        d += Dump.WriteLine(prefix+s);
-        ThermalAsset thermalAsset = thermalPropSet.GetThermalAsset();
-        d += Dump.ToString(thermalAsset,thermalPropSet,"  "+prefix);
-      }
-      else
-        d += Dump.WriteLine(prefix+s+": -none-");
-    }
-    catch (Exception e)
+    Document doc = material.Document;
+    d += Dump.WriteLine(prefix+String.Format("<Document PathName>: {0}",doc.PathName));
+    
+    // Dump ordinary properties
+    d += Dump.WriteLine(prefix+"<Ordinary Properties>");
+    PropertyInfo[] pis = material.GetType().GetProperties();
+    foreach (PropertyInfo pi in pis)       
+      d += Dump.ToString(pi,material,"  "+prefix);
+
+    // Dump built-in paramters
+    d += Dump.WriteLine(prefix+"<Built-in Parameters>");
+    foreach (BuiltInParameter bip in Enum.GetValues(typeof(BuiltInParameter)))
     {
-      d += Dump.WriteLine(e.ToString());
+      Parameter param = material.get_Parameter(bip);
+      if (param!=null)
+        d += Dump.ToString(param,"  "+prefix+"["+bip.ToString()+"] ");
     }
+
+    // Dump other parameters
+    d += Dump.WriteLine(prefix+"<Other Parameters>");
+    ParameterMap parammap = material.ParametersMap;
+    if (parammap.Size>0)
+      foreach (Parameter param in parammap)
+        Dump.ToString(param,"  "+prefix);
+    else
+        Dump.WriteLine("    "+prefix+"<none>");
+ 
+    // Appearance (Rendering) Asset
+    string s = "<Appearance Asset>";
+    AppearanceAssetElement appearanceElement = doc.GetElement(material.AppearanceAssetId) as AppearanceAssetElement;
+    if (appearanceElement!=null)
+    {
+      d += Dump.WriteLine(prefix+s);
+      Asset appearanceAsset = appearanceElement.GetRenderingAsset();
+      d += Dump.ToString(appearanceAsset,"  "+prefix);
+    }
+    else
+      d += Dump.WriteLine(prefix+s+": -none-");
+
+    // Physical (Structural) Asset
+    s = "<Physical Asset>";
+    PropertySetElement physicalPropSet = doc.GetElement(material.StructuralAssetId) as PropertySetElement;
+    if (physicalPropSet!=null)
+    {
+      d += Dump.WriteLine(prefix+s);
+      StructuralAsset physicalAsset = physicalPropSet.GetStructuralAsset();
+      d += Dump.ToString(physicalAsset,physicalPropSet,"  "+prefix);
+    }
+    else
+      d += Dump.WriteLine(prefix+s+": -none-");
+
+    // Thermal Asset
+    s = "<Thermal Asset>";
+    PropertySetElement thermalPropSet = doc.GetElement(material.ThermalAssetId) as PropertySetElement;
+    if (thermalPropSet!=null)
+    {
+      d += Dump.WriteLine(prefix+s);
+      ThermalAsset thermalAsset = thermalPropSet.GetThermalAsset();
+      d += Dump.ToString(thermalAsset,thermalPropSet,"  "+prefix);
+    }
+    else
+      d += Dump.WriteLine(prefix+s+": -none-");
 
     return d;
   }
@@ -402,22 +414,28 @@ namespace Utils
 
     public void Dump_Materials()
     {
+      // Collect some info
+      Document actDoc      = this.Application.ActiveUIDocument.Document;
+      string   actDocFile  = Path.GetFileName(actDoc.PathName);
+      string   thisDocPath = Path.GetDirectoryName(this.Document.PathName);
+      string   thisDocFile = Path.GetFileName(this.Document.PathName);
+
       // Backup this source file in folder of GIMBA.rfa
       // NOTE: Revit 2022 is tending to lose the most recent changes to this source file!
-      string thisDocPath = Path.GetDirectoryName(this.Document.PathName);
-      string thisDocFile = Path.GetFileName(this.Document.PathName);
-      File.Copy(GetThisFilePath(),Path.Combine(thisDocPath,thisDocFile+"#Utils#ThisDocument.bak.cs"),true);
+      try
+      {
+        string srcFn = GetThisFilePath();
+        string dstFn = Path.Combine(thisDocPath,thisDocFile+"#Utils#ThisDocument.bak.cs");
+        File.Copy(srcFn,dstFn,true);
+        // NOTE: Will only work as long project is open in SharpDevelop...
+      }
+      catch {/*...hence ignore any exceptions*/}
       
-      // Dump all materials contained in active Revit document
-      Document document   = this.Application.ActiveUIDocument.Document;
-      string   actDocFile = Path.GetFileName(document.PathName);
-      string   dump       = Dump.AllMerials(Document);
-      
-      // Write dump to a text file
+      // Dump all materials contained in active Revit document to a text file
       string       fn = Path.Combine(thisDocPath,"Materials_in_"+actDocFile+".txt");
       FileStream   fs = new FileStream(fn,FileMode.Create,FileAccess.Write);  
       StreamWriter fw = new StreamWriter(fs);  
-      fw.WriteLine(dump);  
+      fw.WriteLine(Dump.AllMerials(actDoc)); // <-- See class Dump above!
       fw.Close(); 
 
       // Show wrap-up dialog

@@ -31,6 +31,19 @@ using System.Linq;                      // For .Cast, .ToList, etc
 public class Utils
 {
 
+  #region Static fields
+
+  /// <summary>Author of package</summary>
+  public static string Author = "Matthias Wolff";
+
+  /// <summary>URL of repository</summary>
+  public static string RepoUrl = "https://github.com/matthias-wolff/Revit-Generic-ISO-Metric-Bolt-Assembly";
+
+  /// <summary>URL of help page</summary>
+  public static string HelpUrl = "https://matthias-wolff.github.io/Revit-Generic-ISO-Metric-Bolt-Assembly/GIMBA.html";
+
+  #endregion
+
   #region Paths and Files
   
   /// <summary>Returns the path if the current C# source file</summary>
@@ -108,8 +121,7 @@ public class Utils
   /// <param name="text">The link text</param>
   public static string MakeHelpLink(Document doc, string text)
   {
-    string path = Path.Combine(Path.GetDirectoryName(doc.PathName),"GIMBA.html");
-    return "<a href=\""+path+"\">"+text+"</a>";
+    return "<a href=\""+Utils.HelpUrl+"\">"+text+"</a>";
   }
 
   #endregion
@@ -1229,12 +1241,17 @@ public static class ThreadMaterials
      ));
 
     // Initialize
-    Document doc         = vMat.Document;
-    string   category    = VMATS.Match(vMat.Name).Groups[1]+"";   // E.g. "Steel galvanized"
-    string   description = String.Format(                         // E.g. "Generic ISO metric bolt assembly, steel galvanized with M12 tread"
-                             "Generic ISO metric bolt assembly: {0} with M{1} tread", 
-                             category,tgeo.D
-                           );
+    Document doc       = vMat.Document;
+    string category    = VMATS.Match(vMat.Name).Groups[1]+"";   // E.g. "Steel galvanized"
+    string description = String.Format(                         // E.g. "Generic ISO metric bolt assembly, steel galvanized with M12 tread"
+                           "Generic ISO metric bolt assembly: {0} with M{1} tread", 
+                           category,tgeo.D
+                         );
+    string  comments   = String.Format(
+                           "Rendering material for M{0} thread. Use macro Thread_Materials in GIMBA.rfa "
+                           + " to manage thread materials. See {1} for further instructions.",
+                           tgeo.D,Utils.HelpUrl
+                         );
 
     // Duplicate and edit template material
     ElementId              tAppAssElemId = ElementId.InvalidElementId;
@@ -1243,6 +1260,12 @@ public static class ThreadMaterials
   
     // - Duplicate the material
     Material tMat = vMat.Duplicate(name);
+    
+    // - Make changes to the Material
+    tMat.get_Parameter(BuiltInParameter.ALL_MODEL_MANUFACTURER).Set(Utils.Author);
+    tMat.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(comments);
+    tMat.get_Parameter(BuiltInParameter.ALL_MODEL_URL).Set(Utils.RepoUrl);
+    tMat.get_Parameter(BuiltInParameter.ALL_MODEL_DESCRIPTION).Set(description);
 
     // - Duplicate the appearance asset and the asset(s) in it
     AppearanceAssetElement tAppAssElem = vAppAssElem.Duplicate(name);
