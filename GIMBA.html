@@ -1,12 +1,12 @@
 <html lang="en">
 <head>
-  <meta charset="cp1252">
+  <meta charset="utf-8">
   <title>Revit Families and Macros for Generic ISO Metric Bolt Assemblies</title>
-  <style>
-		body {
-		  width: 16cm;
-		  margin-top: 0;
-		  margin-left: auto;
+  <style> /* Styles */
+    body {
+      width: 16cm;
+      margin-top: 0;
+      margin-left: auto;
       margin-right: auto;
       font-family: Whitney, Calibri, sans-serif;
       font-size: 11pt;
@@ -15,31 +15,21 @@
       -webkit-hyphens: auto;
       hyphens: auto;
       text-align: justify;
-		}
-		h1 {
-      width: 100%;
-		  margin-top: 0;
-      margin-bottom: 0;
-      padding-top: 24pt;
-      padding-bottom: 3pt;
-		  padding-left: 2pt;
-      padding-right: 2pt;
-      text-transform: uppercase;
-      font-size: 16pt;
-      font-weight: 1;
-      background-color: #00AFD3;
-      color: white;
-		}
-		h2 {
+    }
+    header {
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
       margin-top: 18pt;
       margin-bottom: 3pt;
       text-transform: uppercase;
-		  font-size: 16pt;
+      font-size: 16pt;
       font-weight: 1;
-		  color: #00AFD3;
-		}
-    h3 {
-      margin-top: 3pt;
+      color: #00AFD3;
+    }
+    h2 {
+      margin-top: 6pt;
       margin-bottom: 0;
       text-transform: uppercase;
       font-size: 12pt;
@@ -57,6 +47,17 @@
       border-collapse: collapse;
       margin-left: auto;
       margin-right: auto;
+      margin-top: 12pt;
+      margin-bottom: 12pt;
+    }
+    caption {
+      text-align: center;
+      font-size: 9pt;
+      font-weight: 1;
+      font-style: italic;
+      margin-left: 1cm;
+      margin-right: 1cm;
+      margin-bottom: 3pt;
     }
     th {
       font-size: 11pt;
@@ -82,6 +83,26 @@
       vertical-align: top;
       padding: 2pt;
     }
+    td.tablefootnote {
+      font-size: 9pt;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding: 0;
+    }
+    #title{
+      width: 100%;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-top: 24pt;
+      padding-bottom: 3pt;
+      padding-left: 2pt;
+      padding-right: 2pt;
+      text-transform: uppercase;
+      font-size: 16pt;
+      font-weight: 1;
+      background-color: #00AFD3;
+      color: white;
+    }
     #author {
       margin-top: 3pt;
       font-size: 11pt;
@@ -89,22 +110,10 @@
       font-style: italic;
     }
     .TT {
-      font-family: Consolas, monospace;
+      /*font-family: Consolas, monospace;
       letter-spacing: -0.07em;
       font-size: 10pt;
-      font-weight: 1;
-    }
-    .table {
-      margin-top: 12pt;
-      margin-bottom: 12pt;
-    }
-    .tablecaption {
-      text-align: center;
-      font-size: 9pt;
-      font-style: italic;
-      margin-left: 1cm;
-      margin-right: 1cm;
-      margin-bottom: 3pt;
+      font-weight: 1;*/
     }
     .toprule {
       border-top: 1.5pt solid black;
@@ -119,29 +128,42 @@
     .bottomrule {
       border-bottom: 1.5pt solid black;
     }
+    .footnote {
+      font-size: 9pt;
+    }
+    .TODO {
+      background-color: yellow;
+    }
   </style>
 </head>
 <body>
-  <h1>GIMBA &ndash; <b>G</b>eneric <b>I</b>SO <b>M</b>etric <b>B</b>olt <b>A</b>ssemblies<br>
-  <span style="font-size: 14;">Revit Families and Macros</span></h1>
-  <p id="author">
-    Matthias Wolff<br>
-    Brandenburg University of Technology Cottbus-Senftenberg, Germany<br>
-    Most recent version <a href="https://github.com/matthias-wolff/Revit-Generic-ISO-Metric-Bolt-Assembly">here</a>
-  </p>
-  
-  <h2>1&emsp;Contents of Package and Installation</h2>
-  <p>
-   This package contains two Revit component families, <span class="TT">Generic
-   ISO Metric Bolt.rfa</span> and <span class="TT">Generic ISO Metric Bolt 
-   Assembly.rfa</span>, and one macro family, <span class="TT">GIMBA.rfa</span>,
-   along with type catalogs and lookup tables. Table 1 shows an overview.
-  </p>
-  <div class="table">
-    <div class="tablecaption">Table 1: Package contents</div>
+
+  <header>
+    <div id="title">
+      <b>GIMBA</b> &ndash; <b>G</b>eneric <b>I</b>SO <b>M</b>etric <b>B</b>olt <b>A</b>ssemblies<br>
+      <span style="font-size: 14;">Revit Families and Macros</span>
+    </div>
+	  <div id="author">
+	    Matthias Wolff<br>
+	    Brandenburg University of Technology Cottbus-Senftenberg, Germany<br>
+	    Most recent version <a href="https://github.com/matthias-wolff/Revit-Generic-ISO-Metric-Bolt-Assembly">here</a>
+	  </div>
+  </header>
+
+  <main>
+
+    <h1>1&emsp;Introduction</h1>
+	  <h2>1.1&emsp;Contents of Package</h2>
+	  <p>
+	   This package contains two Revit component families, <span class="TT">Generic
+	   ISO Metric Bolt.rfa</span> and <span class="TT">Generic ISO Metric Bolt 
+	   Assembly.rfa</span>, and one macro family, <span class="TT">GIMBA.rfa</span>,
+	   along with type catalogs and lookup tables. Table 1 shows an overview.
+	  </p>
     <table>
+      <caption>Table 1: Package contents</caption>
       <tr class="topmidrule">
-        <th>File(s)</th>
+        <th colspan="2">File(s)</th>
         <th>Preview/Description</th>
         <th class="rotate"><div>Component</div></th>
         <th class="rotate"><div>Type Catalog</div></th>
@@ -149,33 +171,40 @@
         <th class="rotate"><div>Lookup Tables</div></th>
         <th class="rotate"><div>Macros</div></th>
       </tr>
-      <tr>
-        <td><span class="TT" style="white-space: nowrap"
-          >Generic ISO Metric Bolt.rfa<br
-          >Generic ISO Metric Bolt.txt</span></td>
+      <tr class="midrule">
+        <td colspan="2"><span class="TT" style="white-space: nowrap">
+           Generic ISO Metric Bolt.rfa<br>
+           Generic ISO Metric Bolt.txt<span class="footnote"><sup>A)</sup></span>
+        </span></td>
+        <td>&emsp;<img
+           alt="Preview of Generic ISO Metric Bolt component family" 
+           src="Figures/BoltPreview.svg"/>
+        </td>
+        <td style="text-align: center">&#x25cf;</td>
+        <td style="text-align: center">&#x25cf;</td>
+        <td style="text-align: center">&#x25cf;</td>
         <td></td>
-        <td style="text-align: center">&#x25cf;</td>
-        <td style="text-align: center">&#x25cf;</td>
-        <td style="text-align: center">&#x25cf;</td>
-        <td style="text-align: center">&#x25cf;</td>
-        <td></td>
-      </tr>
-      <tr>
-        <td><span class="TT" style="white-space: nowrap"
-          >Generic ISO Metric Bolt Assembly.rfa<br
-          >Generic ISO Metric Bolt Assembly.txt<br
-          ></span></td>
-        <td></td>
-        <td style="text-align: center">&#x25cf;</td>
-        <td style="text-align: center">&#x25cf;</td>
-        <td style="text-align: center">&#x25cf;</td>
-        <td style="text-align: center">&#x25cf;</td>
         <td></td>
       </tr>
-      <tr>
-        <td><span class="TT" style="white-space: nowrap"
-          >Generic ISO Metric Bolt Assembly Geometry.rfa</span
-          ></td>
+      <tr class="midrule">
+         <td colspan="2"><span class="TT" style="white-space: nowrap">
+           Generic ISO Metric Bolt Assembly.rfa<br>
+           Generic ISO Metric Bolt Assembly.txt<span class="footnote"><sup>A)</sup></span>
+         </span></td>
+         <td>&emsp;<img 
+           alt="Preview of Generic ISO Metric Bolt Assembly component family" 
+           src="Figures/BoltAssemblyPreview.svg"/>
+         </td>
+         <td style="text-align: center">&#x25cf;</td>
+         <td style="text-align: center">&#x25cf;</td>
+         <td style="text-align: center">&#x25cf;</td>
+         <td style="text-align: center">&#x25cf;</td>
+         <td></td>
+       </tr>
+      <tr class="midrule">
+        <td colspan="2"><span class="TT" style="white-space: nowrap">
+          GIMBA Geometry.rfa<span class="footnote"><sup>B)</sup></span>
+        </span></td>
         <td>Common 3D geometry of the component families above</td>
         <td></td>
         <td></td>
@@ -183,11 +212,14 @@
         <td style="text-align: center">&#x25cf;</td>
         <td></td>
       </tr>
-      <tr>
-        <td><span class="TT" style="white-space: nowrap"
-          >GIMBA.rfa</span></td>
-        <td>Management macros for thread materials, type catalogs, and lookup 
-          tables</td>
+      <tr class="midrule">
+        <td colspan="2"><span class="TT" style="white-space: nowrap">
+          GIMBA Macros.rfa
+        </span></td>
+        <td>
+          Management macros for thread materials, type catalogs, and lookup 
+          tables
+        </td>
         <td></td>
         <td></td>
         <td></td>
@@ -195,8 +227,9 @@
         <td style="text-align: center">&#x25cf;</td>
       </tr>
       <tr class="bottomrule">
-        <td><span class="TT" style="white-space: nowrap"
-          >GIMBA.html</span></td>
+        <td colspan="2"><span class="TT" style="white-space: nowrap">
+          GIMBA.html
+        </span></td>
         <td>This documentation</td>
         <td style="background-color:#E0E0E0">&nbsp;</td>
         <td style="background-color:#E0E0E0">&nbsp;</td>
@@ -204,8 +237,28 @@
         <td style="background-color:#E0E0E0">&nbsp;</td>
         <td style="background-color:#E0E0E0">&nbsp;</td>
       </tr>
+      <tr>
+        <td class="tablefootnote" style="width: 0.7em"><sup>A)</sup></td>
+        <td colspan="7" class="tablefootnote">
+          Type catalog file
+        </td>
+      </tr>
+      <tr>
+         <td class="tablefootnote" style="width: 0.7em"><sup>B)</sup></td>
+         <td colspan="7" class="tablefootnote">
+           Loaded into component families, included for documentation only
+         </td>
+       </tr>
     </table>
-  </div>
+    <p><span class="TODO"><b>[TODO:</b> Materials<b>]</b></span></p>
+
+    <h2>1.2&emsp;GIMBA or Revit Built-In Bolts?</h2>
+    <p><span class="TODO"><b>[TODO:</b> ...<b>]</b></span></p>
+
+    <h2>1.3&emsp;Installation</h2>
+    <p><span class="TODO"><b>[TODO:</b> ...<b>]</b></span></p>
+
+  </main>
 
 </body>
 <!-- 
